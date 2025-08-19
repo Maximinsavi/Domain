@@ -7,7 +7,7 @@ const db = require('./db');
 const app = express();
 const PORT = 3000;
 
-app.use(express.static('public'));
+app.use(express.static(__dirname));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(session({
     secret: 'maxchat_secret',
