@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h2>Tableau de bord</h2>
+    <a href="add_domain.html">Ajouter domaine</a> | <a href="/logout">Déconnexion</a>
+    <table border="1" id="domainTable">
+        <tr>
+            <th>Nom du domaine</th>
+            <th>Extension</th>
+            <th>Date enregistrement</th>
+            <th>Date expiration</th>
+            <th>Status</th>
+        </tr>
+    </table>
+
+    <script>
+    fetch('/domains')
+    .then(res => res.json())
+    .then(data => {
+        const table = document.getElementById('domainTable');
+        data.forEach(d => {
+            let row = table.insertRow();
+            row.insertCell(0).innerText = d.domain_name;
+            row.insertCell(1).innerText = d.extension;
+            row.insertCell(2).innerText = d.registration_date;
+            row.insertCell(3).innerText = d.expiration_date;
+            row.insertCell(4).innerText = d.status;
+        });
+    });
+    </script>
+</body>
+</html>
