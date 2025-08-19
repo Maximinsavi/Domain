@@ -15,10 +15,9 @@ app.use(session({
     saveUninitialized: true
 }));
 
-// Middleware authentification
 function isAuthenticated(req, res, next) {
-    if (req.session.userId) return next();
-    res.redirect('/index.html');
+    if(req.session.userId) return next();
+    res.redirect('/login.html');
 }
 
 // Inscription
@@ -26,9 +25,9 @@ app.post('/register', (req, res) => {
     const { username, email, password } = req.body;
     const hash = bcrypt.hashSync(password, 10);
     const stmt = db.prepare("INSERT INTO users (username, email, password) VALUES (?, ?, ?)");
-    stmt.run(username, email, hash, function(err) {
+    stmt.run(username, email, hash, function(err){
         if(err) return res.send("Erreur inscription : " + err.message);
-        res.redirect('/index.html');
+        res.redirect('/login.html');
     });
 });
 
