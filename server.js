@@ -1,26 +1,24 @@
-const path = require('path');
-
-// ...
-
-app.post('/login', (req, res) => {
-    const { email, password } = req.body;
-    db.get("SELECT * FROM users WHERE email=?", [email], (err, user) => {
-        if(err) return res.send(err.message);
-        if(user && bcrypt.compareSync(password, user.password)){
-            req.session.userId = user.id;
-            res.sendFile(path.join(__dirname, 'dashboard.html')); // redirige correctement
-        } else {
-            res.send("Email ou mot de passe incorrect");
-        }
-    });
+// Route pour la page de connexion
+app.get('/login.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'login.html'));
 });
 
+// Route pour la page d'inscription
+app.get('/register.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'register.html'));
+});
+
+// Route pour traiter l'inscription
 app.post('/register', (req, res) => {
     const { username, email, password } = req.body;
-    const hash = bcrypt.hashSync(password, 10);
-    const stmt = db.prepare("INSERT INTO users (username, email, password) VALUES (?, ?, ?)");
-    stmt.run(username, email, hash, function(err){
-        if(err) return res.send("Erreur inscription : " + err.message);
-        res.sendFile(path.join(__dirname, 'login.html')); // redirige vers login correctement
-    });
+    // Code pour enregistrer l'utilisateur dans la base de données
+    res.redirect('/login.html');
+});
+
+// Route pour traiter la connexion
+app.post('/login', (req, res) => {
+    const { email, password } = req.body;
+    // Code pour vérifier les identifiants de l'utilisateur
+    req.session.userId = user.id; // Exemple de stockage de l'ID utilisateur dans la session
+    res.redirect('/dashboard.html');
 });
