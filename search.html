@@ -1,0 +1,152 @@
+<html>
+<head>
+  <title>MaxChat Google Search</title>
+  <meta charset="utf-8">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: #f2f2f2;
+      color: #202124;
+    }
+    h2 { text-align: center; padding: 10px; }
+    #searchBar {
+      display: flex;
+      max-width: 600px;
+      margin: 10px auto;
+    }
+    #userInput {
+      flex: 1;
+      padding: 8px;
+      font-size: 16px;
+      border-radius: 20px 0 0 20px;
+      border: 1px solid #ccc;
+      outline: none;
+    }
+    button {
+      padding: 8px 16px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-left: none;
+      background: #4285F4;
+      color: white;
+      cursor: pointer;
+      border-radius: 0 20px 20px 0;
+    }
+    #tabs {
+      display: flex;
+      justify-content: center;
+      margin-top: 10px;
+    }
+    .tab {
+      margin: 0 5px;
+      padding: 5px 10px;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+    }
+    .tab.active {
+      border-color: #4285F4;
+      font-weight: bold;
+    }
+    #chatbox {
+      max-width: 700px;
+      margin: 10px auto;
+      background: white;
+      border-radius: 10px;
+      padding: 10px;
+      min-height: 300px;
+      box-shadow: 0 0 5px #aaa;
+      overflow-y: auto;
+    }
+    .result {
+      margin: 10px 0;
+      padding: 5px 0;
+      border-bottom: 1px solid #eee;
+    }
+    .result a {
+      color: #1a0dab;
+      text-decoration: none;
+      font-weight: bold;
+      font-size: 16px;
+    }
+    .result p {
+      margin: 3px 0;
+      font-size: 14px;
+      color: #4d5156;
+    }
+    img.resultImg {
+      max-width: 150px;
+      border-radius: 5px;
+      margin-top: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h2>🤖 MaxChat Google Search</h2>
+  <div id="searchBar">
+    <input id="userInput" placeholder="Tape ta recherche...">
+    <button onclick="send()">Recherche</button>
+  </div>
+  <div id="tabs">
+    <div class="tab active" onclick="setTab('web')">Web</div>
+    <div class="tab" onclick="setTab('images')">Images</div>
+    <div class="tab" onclick="setTab('news')">Actualités</div>
+  </div>
+  <div id="chatbox"></div>
+
+<script>
+  var apiKey = "AIzaSyB_axy0B9HoF5RDbxpXLxIPxZmu06p3jOs";
+  var cxWeb = "a536fdccf9b2144a9";  // moteur Web
+  var cxImages = "b123456imagecx";   // moteur Images
+  var cxNews = "c98765newscx";       // moteur News
+  var currentTab = 'web';
+  var myName = ":my_name:";
+
+  function setTab(tab){
+    currentTab = tab;
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    event.target.classList.add('active');
+    document.getElementById("chatbox").innerHTML = "";
+  }
+
+  function addMessage(text){
+    var chatbox = document.getElementById("chatbox");
+    var div = document.createElement("div");
+    div.innerHTML = text;
+    chatbox.appendChild(div);
+    chatbox.scrollTop = chatbox.scrollHeight;
+  }
+
+  function send(){
+    var q = document.getElementById("userInput").value.trim();
+    if(!q) return;
+    addMessage("<p><b>Moi:</b> "+q+"</p>");
+    document.getElementById("userInput").value = "";
+
+    var cx = cxWeb;
+    if(currentTab=='images') cx = cxImages;
+    if(currentTab=='news') cx = cxNews;
+
+    var url = "https://www.googleapis.com/customsearch/v1?key="+apiKey+"&cx="+cx+"&q="+encodeURIComponent(q);
+    fetch(url)
+      .then(res=>res.json())
+      .then(r=>{
+        if(!r.items || r.items.length==0){
+          addMessage("<p><b>MaxChat:</b> Aucun résultat trouvé</p>");
+          return;
+        }
+        r.items.forEach(i=>{
+          if(currentTab=='images'){
+            addMessage('<div class="result"><a href="'+i.link+'" target="_blank">'+i.title+'</a><br><img src="'+i.link+'" class="resultImg"></div>');
+          } else if(currentTab=='news'){
+            addMessage('<div class="result"><a href="'+i.link+'" target="_blank">'+i.title+'</a><p>'+i.snippet+'</p></div>');
+          } else{
+            addMessage('<div class="result"><a href="'+i.link+'" target="_blank">'+i.title+'</a><p>'+i.snippet+'</p></div>');
+          }
+        })
+      })
+      .catch(e=>addMessage("<p><b>MaxChat:</b> Erreur lors de la recherche</p>"));
+  }
+</script>
+</body>
+</html>
