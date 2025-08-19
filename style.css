@@ -1,0 +1,64 @@
+body {
+    font-family: 'Roboto', sans-serif;
+    margin:0;
+    padding:0;
+    background: linear-gradient(135deg, #4e54c8, #8f94fb);
+    color: white;
+}
+
+.container {
+    max-width: 900px;
+    margin: auto;
+    padding: 20px;
+    text-align: center;
+}
+
+h1 { font-size: 2.5rem; margin-bottom: 10px; }
+p { font-size: 1.2rem; margin-bottom: 30px; }
+
+.btn {
+    padding: 12px 30px;
+    margin: 10px;
+    border: none;
+    border-radius: 30px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+    text-decoration: none;
+    color: white;
+}
+.btn-login { background: #6c63ff; }
+.btn-login:hover { background: #5952c6; }
+.btn-register { background: #ff6584; }
+.btn-register:hover { background: #e54f6e; }
+
+/* Cards pour dashboard */
+.card {
+    background: rgba(255,255,255,0.1);
+    margin: 15px;
+    padding: 20px;
+    border-radius: 15px;
+    display: inline-block;
+    width: 250px;
+    vertical-align: top;
+    transition: 0.3s;
+}
+.card:hover { background: rgba(255,255,255,0.2); }
+
+input, textarea {
+    padding: 10px;
+    border-radius: 10px;
+    border: none;
+    margin: 5px 0;
+    width: 80%;
+}
+
+button { border-radius: 20px; border:none; padding:10px 20px; background:#6c63ff; color:white; cursor:pointer; transition:0.3s; }
+button:hover { background:#5952c6; }
+
+@media(max-width:600px){
+    .card { width: 90%; }
+    h1 { font-size:2rem; }
+    p { font-size:1rem; }
+}
