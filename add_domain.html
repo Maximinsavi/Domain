@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ajouter un domaine</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="container">
+    <h1>Ajouter un domaine</h1>
+    <form action="/add_domain" method="post">
+        <input type="text" name="domain_name" placeholder="Nom du domaine" required><br>
+        <input type="text" name="extension" placeholder="Extension (.com, .net, ...)" required><br>
+        <label>Date d'enregistrement</label><br>
+        <input type="date" name="registration_date" required><br>
+        <label>Date d'expiration</label><br>
+        <input type="date" name="expiration_date" required><br>
+        <textarea name="notes" placeholder="Notes"></textarea><br>
+        <button type="submit">Ajouter</button>
+    </form>
+</div>
+</body>
+</html>
