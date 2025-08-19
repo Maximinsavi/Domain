@@ -1,152 +1,176 @@
 <html>
 <head>
-  <title>MaxChat Google Search</title>
-  <meta charset="utf-8">
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      background: #f2f2f2;
-      color: #202124;
-    }
-    h2 { text-align: center; padding: 10px; }
-    #searchBar {
-      display: flex;
-      max-width: 600px;
-      margin: 10px auto;
-    }
-    #userInput {
-      flex: 1;
-      padding: 8px;
-      font-size: 16px;
-      border-radius: 20px 0 0 20px;
-      border: 1px solid #ccc;
-      outline: none;
-    }
-    button {
-      padding: 8px 16px;
-      font-size: 16px;
-      border: 1px solid #ccc;
-      border-left: none;
-      background: #4285F4;
-      color: white;
-      cursor: pointer;
-      border-radius: 0 20px 20px 0;
-    }
-    #tabs {
-      display: flex;
-      justify-content: center;
-      margin-top: 10px;
-    }
-    .tab {
-      margin: 0 5px;
-      padding: 5px 10px;
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
-    }
-    .tab.active {
-      border-color: #4285F4;
-      font-weight: bold;
-    }
-    #chatbox {
-      max-width: 700px;
-      margin: 10px auto;
-      background: white;
-      border-radius: 10px;
-      padding: 10px;
-      min-height: 300px;
-      box-shadow: 0 0 5px #aaa;
-      overflow-y: auto;
-    }
-    .result {
-      margin: 10px 0;
-      padding: 5px 0;
-      border-bottom: 1px solid #eee;
-    }
-    .result a {
-      color: #1a0dab;
-      text-decoration: none;
-      font-weight: bold;
-      font-size: 16px;
-    }
-    .result p {
-      margin: 3px 0;
-      font-size: 14px;
-      color: #4d5156;
-    }
-    img.resultImg {
-      max-width: 150px;
-      border-radius: 5px;
-      margin-top: 5px;
-    }
-  </style>
+<meta charset="utf-8">
+<title>MaxSearch</title>
+<style>
+body {
+  font-family: Arial, sans-serif;
+  margin:0;
+  background:#f2f2f2;
+  text-align:center;
+}
+header {
+  padding:20px;
+  background:white;
+  box-shadow:0 1px 5px rgba(0,0,0,0.1);
+}
+header h1 {
+  font-family: 'Arial Black', sans-serif;
+  color:#4285F4;
+  margin:0;
+}
+#searchBar {
+  margin:20px auto;
+  display:flex;
+  justify-content:center;
+  max-width:600px;
+}
+#userInput {
+  width:70%;
+  padding:10px;
+  font-size:16px;
+  border-radius:20px 0 0 20px;
+  border:1px solid #ccc;
+  outline:none;
+}
+button {
+  padding:10px 20px;
+  font-size:16px;
+  border:none;
+  background:#4285F4;
+  color:white;
+  cursor:pointer;
+  border-radius:0 20px 20px 0;
+}
+#tabs {
+  margin-top:10px;
+  display:flex;
+  justify-content:center;
+}
+.tab {
+  padding:8px 15px;
+  cursor:pointer;
+  margin:0 5px;
+  border-bottom:2px solid transparent;
+}
+.tab.active {
+  border-color:#4285F4;
+  font-weight:bold;
+}
+#results {
+  max-width:800px;
+  margin:20px auto;
+  text-align:left;
+}
+.result {
+  margin-bottom:15px;
+  background:white;
+  padding:10px;
+  border-radius:8px;
+  box-shadow:0 1px 3px rgba(0,0,0,0.1);
+}
+.result a {
+  text-decoration:none;
+  color:#1a0dab;
+  font-size:16px;
+  font-weight:bold;
+}
+.result p {
+  color:#4d5156;
+  font-size:14px;
+}
+.result img {
+  max-width:200px;
+  display:block;
+  margin-top:5px;
+  border-radius:5px;
+}
+iframe.map {
+  width:100%;
+  height:300px;
+  border:0;
+  border-radius:8px;
+}
+</style>
 </head>
 <body>
-  <h2>🤖 MaxChat Google Search</h2>
-  <div id="searchBar">
-    <input id="userInput" placeholder="Tape ta recherche...">
-    <button onclick="send()">Recherche</button>
-  </div>
-  <div id="tabs">
-    <div class="tab active" onclick="setTab('web')">Web</div>
-    <div class="tab" onclick="setTab('images')">Images</div>
-    <div class="tab" onclick="setTab('news')">Actualités</div>
-  </div>
-  <div id="chatbox"></div>
+<header>
+  <h1>MaxSearch</h1>
+</header>
+
+<div id="searchBar">
+  <input id="userInput" placeholder="Tape ta recherche...">
+  <button onclick="search()">Recherche</button>
+</div>
+
+<div id="tabs">
+  <div class="tab active" onclick="setTab('web')">Web</div>
+  <div class="tab" onclick="setTab('images')">Images</div>
+  <div class="tab" onclick="setTab('news')">Actualités</div>
+  <div class="tab" onclick="setTab('videos')">Vidéos</div>
+  <div class="tab" onclick="setTab('maps')">Maps</div>
+</div>
+
+<div id="results"></div>
 
 <script>
-  var apiKey = "AIzaSyB_axy0B9HoF5RDbxpXLxIPxZmu06p3jOs";
-  var cxWeb = "a536fdccf9b2144a9";  // moteur Web
-  var cxImages = "b123456imagecx";   // moteur Images
-  var cxNews = "c98765newscx";       // moteur News
-  var currentTab = 'web';
-  var myName = ":my_name:";
+var currentTab='web';
 
-  function setTab(tab){
-    currentTab = tab;
-    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-    event.target.classList.add('active');
-    document.getElementById("chatbox").innerHTML = "";
+var apiKeyCS = "TA_CLE_API_GOOGLE"; // Google Custom Search API key
+var cxWeb = "CX_WEB";   // Custom search engine ID Web
+var cxImages = "CX_IMAGES"; // Custom search engine ID Images
+var newsApiKey = "TA_NEWS_API_KEY"; // News API
+var youtubeApiKey = "TA_YOUTUBE_API_KEY"; // YouTube API
+
+function setTab(tab){
+  currentTab=tab;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('results').innerHTML='';
+}
+
+function search(){
+  var q=document.getElementById('userInput').value.trim();
+  if(!q) return;
+  document.getElementById('results').innerHTML='<p>Chargement...</p>';
+
+  if(currentTab=='web' || currentTab=='images'){
+    var cx = currentTab=='web'? cxWeb : cxImages;
+    fetch(`https://www.googleapis.com/customsearch/v1?key=${apiKeyCS}&cx=${cx}&q=${encodeURIComponent(q)}`)
+    .then(res=>res.json())
+    .then(r=>{
+      displayResults(r.items || []);
+    }).catch(e=>document.getElementById('results').innerHTML='Erreur');
   }
-
-  function addMessage(text){
-    var chatbox = document.getElementById("chatbox");
-    var div = document.createElement("div");
-    div.innerHTML = text;
-    chatbox.appendChild(div);
-    chatbox.scrollTop = chatbox.scrollHeight;
+  else if(currentTab=='news'){
+    fetch(`https://newsapi.org/v2/everything?q=${encodeURIComponent(q)}&apiKey=${newsApiKey}&pageSize=10`)
+    .then(res=>res.json())
+    .then(r=>displayResults(r.articles || []));
   }
-
-  function send(){
-    var q = document.getElementById("userInput").value.trim();
-    if(!q) return;
-    addMessage("<p><b>Moi:</b> "+q+"</p>");
-    document.getElementById("userInput").value = "";
-
-    var cx = cxWeb;
-    if(currentTab=='images') cx = cxImages;
-    if(currentTab=='news') cx = cxNews;
-
-    var url = "https://www.googleapis.com/customsearch/v1?key="+apiKey+"&cx="+cx+"&q="+encodeURIComponent(q);
-    fetch(url)
-      .then(res=>res.json())
-      .then(r=>{
-        if(!r.items || r.items.length==0){
-          addMessage("<p><b>MaxChat:</b> Aucun résultat trouvé</p>");
-          return;
-        }
-        r.items.forEach(i=>{
-          if(currentTab=='images'){
-            addMessage('<div class="result"><a href="'+i.link+'" target="_blank">'+i.title+'</a><br><img src="'+i.link+'" class="resultImg"></div>');
-          } else if(currentTab=='news'){
-            addMessage('<div class="result"><a href="'+i.link+'" target="_blank">'+i.title+'</a><p>'+i.snippet+'</p></div>');
-          } else{
-            addMessage('<div class="result"><a href="'+i.link+'" target="_blank">'+i.title+'</a><p>'+i.snippet+'</p></div>');
-          }
-        })
-      })
-      .catch(e=>addMessage("<p><b>MaxChat:</b> Erreur lors de la recherche</p>"));
+  else if(currentTab=='videos'){
+    fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(q)}&type=video&key=${youtubeApiKey}&maxResults=10`)
+    .then(res=>res.json())
+    .then(r=>{
+      var items = r.items.map(i=>({title:i.snippet.title, link:"https://www.youtube.com/watch?v="+i.id.videoId, snippet:i.snippet.description, img:i.snippet.thumbnails.medium.url}));
+      displayResults(items);
+    });
   }
+  else if(currentTab=='maps'){
+    document.getElementById('results').innerHTML=`<iframe class="map" src="https://www.google.com/maps/embed/v1/search?key=${apiKeyCS}&q=${encodeURIComponent(q)}"></iframe>`;
+  }
+}
+
+function displayResults(items){
+  var html='';
+  items.forEach(i=>{
+    html+='<div class="result">';
+    html+='<a href="'+i.link+'" target="_blank">'+i.title+'</a>';
+    if(i.snippet) html+='<p>'+i.snippet+'</p>';
+    if(i.img) html+='<img src="'+i.img+'">';
+    html+='</div>';
+  });
+  document.getElementById('results').innerHTML=html;
+}
 </script>
 </body>
 </html>
