@@ -1,34 +1,23 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard</title>
-<link rel="stylesheet" href="style.css">
-</head>
-<body>
-<div class="container">
-    <h1>Tableau de bord</h1>
-    <a href="add_domain.html" class="btn btn-register">Ajouter un domaine</a>
-    <a href="/logout" class="btn btn-login">Déconnexion</a>
-    <div id="domainsContainer"></div>
-</div>
-
+<div id="domainsContainer" style="display:flex; flex-wrap:wrap; justify-content:center; margin-top:20px;"></div>
 <script>
 fetch('/domains')
 .then(res => res.json())
 .then(data => {
     const container = document.getElementById('domainsContainer');
+    if(data.length === 0){
+        container.innerHTML = "<p>Aucun domaine enregistré pour le moment.</p>";
+    }
     data.forEach(d => {
         let card = document.createElement('div');
         card.className = 'card';
-        card.innerHTML = `<h3>${d.domain_name}.${d.extension}</h3>
-                          <p>Enregistré : ${d.registration_date}</p>
-                          <p>Expire : ${d.expiration_date}</p>
-                          <p>Status : ${d.status}</p>`;
+        card.style.boxShadow = '0 8px 16px rgba(0,0,0,0.3)';
+        card.style.transition = '0.3s';
+        card.innerHTML = `
+            <h3 style="color:#fff;">${d.domain_name}.${d.extension}</h3>
+            <p>Enregistré : ${d.registration_date}</p>
+            <p>Expire : ${d.expiration_date}</p>
+            <p>Status : ${d.status}</p>`;
         container.appendChild(card);
     });
 });
 </script>
-</body>
-</html>
