@@ -2,7 +2,7 @@ import requests
 import time
 
 # Identifiants
-USERNAME = "Maximin"
+USERNAME = "Thibaut"
 PASSWORD = "64932261"
 
 # URLs
@@ -23,7 +23,7 @@ def login():
 
 def publier():
     payload = {
-        "text": "Salut",
+        "text": "Hello world , new hours ",
         "blog_submit": "Post"
     }
     r = session.post(POST_URL, data=payload)
