@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>AI Chat – Gemini 2.0 Flash</title>
+  <style>
+    :root { --bg:#0b1020; --card:#121732; --text:#f2f4ff; --muted:#9aa3c7; --accent:#6ea8fe;}
+    *{box-sizing:border-box}
+    body{margin:0;background:linear-gradient(180deg,#0b1020,#0e1430);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial}
+    header{position:sticky;top:0;background:rgba(11,16,32,.75);backdrop-filter:blur(8px);border-bottom:1px solid rgba(255,255,255,.06)}
+    .wrap{max-width:840px;margin:0 auto;padding:16px}
+    .title{font-weight:700;font-size:20px;letter-spacing:.2px}
+    .container{display:flex;flex-direction:column;height:calc(100dvh - 64px)}
+    .chat{flex:1;overflow:auto;padding:16px;scroll-behavior:smooth}
+    .bubble{max-width:85%;padding:12px 14px;border-radius:18px;margin:8px 0;line-height:1.45;background:var(--card);border:1px solid rgba(255,255,255,.06);box-shadow:0 6px 20px rgba(0,0,0,.25)}
+    .me{margin-left:auto;background:#1c2b5a}
+    .bot pre{white-space:pre-wrap;word-wrap:break-word}
+    form{display:flex;gap:8px;padding:12px;background:rgba(0,0,0,.25);border-top:1px solid rgba(255,255,255,.06)}
+    input[type="text"]{flex:1;padding:12px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.1);background:#0e1430;color:var(--text);outline:none}
+    button{padding:12px 16px;border-radius:14px;border:1px solid rgba(255,255,255,.12);background:var(--accent);color:#051029;font-weight:700;cursor:pointer}
+    .hint{color:var(--muted);font-size:12px;margin-top:8px}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <div class="title">🤖 AI Chat – Gemini 2.0 Flash</div>
+    </div>
+  </header>
+
+  <div class="wrap container">
+    <div id="chat" class="chat" aria-live="polite"></div>
+
+    <form id="form" autocomplete="off">
+      <input id="input" type="text" name="message" placeholder="Écrivez votre message…" required>
+      <button type="submit">Envoyer</button>
+    </form>
+    <div class="hint">Les 10 derniers messages sont sauvegardés localement.</div>
+  </div>
+
+  <script>
+    const API_KEY = "AIzaSyAXoP6bgNnxSznqBGzhKCTEy4pDkzoceek";
+    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
+    const chatEl = document.getElementById('chat');
+    const form = document.getElementById('form');
+    const input = document.getElementById('input');
+    const LS_KEY = 'gemini_chat_history_v1';
+
+    function loadLocalHistory() {
+      try { return JSON.parse(localStorage.getItem(LS_KEY)) || []; } catch { return []; }
+    }
+    function saveLocalHistory(h) {
+      try { localStorage.setItem(LS_KEY, JSON.stringify(h.slice(-10))); } catch {}
+    }
+    function render(history) {
+      chatEl.innerHTML = '';
+      for (const m of history) {
+        const div = document.createElement('div');
+        div.className = 'bubble ' + (m.role === 'user' ? 'me' : 'bot');
+        div.innerHTML = m.role === 'user' ? escapeHtml(m.text) : mdToHtml(m.text);
+        chatEl.appendChild(div);
+      }
+      chatEl.scrollTop = chatEl.scrollHeight;
+    }
+    function escapeHtml(s){return s.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}
+    function mdToHtml(s){
+      return escapeHtml(s).replace(/```([\\s\\S]*?)```/g, '<pre><code>$1</code></pre>').replace(/`([^`]+)`/g,'<code>$1</code>');
+    }
+
+    let history = loadLocalHistory();
+    render(history);
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const text = input.value.trim();
+      if (!text) return;
+      input.value = '';
+      history = [...history, { role: 'user', text }].slice(-10);
+      render(history);
+
+      const pending = { role: 'model', text: '⏳ …' };
+      history = [...history, pending];
+      render(history);
+
+      try {
+        const contents = history.map(m => ({
+          role: m.role === 'user' ? 'user' : 'model',
+          parts: [{ text: m.text }]
+        }));
+        const body = {
+          contents: contents,
+          generationConfig: {
+            temperature: 0.7,
+            topK: 40,
+            topP: 0.95,
+            maxOutputTokens: 512
+          }
+        };
+        const resp = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        const data = await resp.json();
+        const reply = data?.candidates?.[0]?.content?.parts?.map(p=>p.text).join("\\n") || "Erreur: Réponse vide";
+        history = history.slice(0, -1);
+        history = [...history, { role: 'model', text: reply }];
+      } catch (err) {
+        history = history.slice(0, -1);
+        history.push({ role: 'model', text: 'Erreur: ' + err.message });
+      }
+      history = history.slice(-10);
+      saveLocalHistory(history);
+      render(history);
+    });
+  </script>
+</body>
+</html>
