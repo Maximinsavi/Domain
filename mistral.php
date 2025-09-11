@@ -1,3 +1,9 @@
+<?php
+header('Content-Type: application/json; charset=utf-8');
+
+// Auteur / Crédit
+$credit = ['author' => 'Maximin'];
+
 // 🔹 ইউজারের ইনপুট ধরার পালা! যদি কেউ text প্যারামিটার ছাড়া আসে, তাকে বকা দেওয়া হবে!
 $text = isset($_GET['text']) ? trim($_GET['text']) : '';
 
@@ -11,7 +17,7 @@ $url = "https://mistral-ai.chat/wp-admin/admin-ajax.php";
 $data = [
     'action'  => "ai_chat_response",
     'message' => $text,
-    'nonce'   => "83103efe99" // এটা হলো গোপন চাবি!
+    'nonce'   => "83103efe99" // ⚠️ Ce nonce doit être valide au moment de la requête
 ];
 
 // cURL: আমাদের বার্তা বাহক, যে Mistral AI এর কাছে আমাদের বার্তা নিয়ে যাবে
@@ -27,6 +33,9 @@ curl_setopt($ch, CURLOPT_HTTPHEADER, [
     'Content-Type: application/x-www-form-urlencoded'
 ]);
 
+// 👉 Test SSL (décommente si erreur SSL)
+// curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+
 // বার্তা বাহক তার কাজ শুরু করলো...
 $response = curl_exec($ch);
 $error = curl_error($ch);
@@ -38,13 +47,29 @@ if ($response === false || !empty($error)) {
     exit;
 }
 
+// 🔎 Debug brut (pour voir ce que le serveur répond exactement)
+// Si tu veux tester, décommente la ligne suivante :
+// echo $response; exit;
+
 // Mistral AI এর পাঠানো গুপ্ত বার্তা উদ্ধার
 $apiResponse = json_decode($response, true);
-$finalMessage = isset($apiResponse['data']['message']) ? trim($apiResponse['data']['message']) : 'AI আজকে ছুটিতে আছে, কোনো উত্তর দেয়নি!';
+
+// Vérifie si JSON valide
+if ($apiResponse === null) {
+    echo json_encode(array_merge($credit, [
+        'error' => '⚠️ Réponse invalide (pas du JSON)',
+        'raw_response' => $response
+    ]), JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+    exit;
+}
+
+// Récupère le message de l’API
+$finalMessage = isset($apiResponse['data']['message']) 
+    ? trim($apiResponse['data']['message']) 
+    : 'AI আজকে ছুটিতে আছে, কোনো উত্তর দেয়নি!';
 
 // ফাইনাল আউটপুট ইউজারের স্ক্রিনে দেখানো
 echo json_encode(array_merge($credit, [
     'status' => '✅ মিশন সফল!',
     'message' => $finalMessage
 ]), JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
-?>
