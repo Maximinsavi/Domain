@@ -4,72 +4,55 @@ header('Content-Type: application/json; charset=utf-8');
 // Auteur / Crédit
 $credit = ['author' => 'Maximin'];
 
-// 🔹 ইউজারের ইনপুট ধরার পালা! যদি কেউ text প্যারামিটার ছাড়া আসে, তাকে বকা দেওয়া হবে!
-$text = isset($_GET['text']) ? trim($_GET['text']) : '';
+// Récupération du texte (GET) ou valeur par défaut
+$text = isset($_GET['text']) && trim($_GET['text']) !== '' ? trim($_GET['text']) : 'hello';
 
-if (empty($text)) {
-    echo json_encode(array_merge($credit, ['error' => '❌ দোস্ত, text প্যারামিটারে কিছু একটা তো লেখো!']));
-    exit;
-}
-
-// Mistral AI এর দরজা
+// URL et données à envoyer
 $url = "https://mistral-ai.chat/wp-admin/admin-ajax.php";
 $data = [
     'action'  => "ai_chat_response",
     'message' => $text,
-    'nonce'   => "83103efe99" // ⚠️ Ce nonce doit être valide au moment de la requête
+    'nonce'   => "83103efe99" // ⚠️ doit être valide
 ];
 
-// cURL: আমাদের বার্তা বাহক, যে Mistral AI এর কাছে আমাদের বার্তা নিয়ে যাবে
+// Prépare la requête cURL
 $ch = curl_init();
 curl_setopt($ch, CURLOPT_URL, $url);
 curl_setopt($ch, CURLOPT_POST, true);
 curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-curl_setopt($ch, CURLOPT_HTTPHEADER, [
-    'User-Agent: AzRBot/1.6',
-    'Accept: application/json',
-    'x-requested-with: XMLHttpRequest',
-    'Content-Type: application/x-www-form-urlencoded'
-]);
 
-// 👉 Test SSL (décommente si erreur SSL)
-// curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-
-// বার্তা বাহক তার কাজ শুরু করলো...
+// Exécute la requête
 $response = curl_exec($ch);
 $error = curl_error($ch);
-curl_close($ch); // কাজ শেষে বার্তা বাহককে ছুটি দেওয়া হলো
+curl_close($ch);
 
-// যদি বার্তা বাহক কোনো ভুল করে বা রাস্তা হারিয়ে ফেলে
-if ($response === false || !empty($error)) {
-    echo json_encode(array_merge($credit, ['error' => '⚠️ হায় হায়! API রিকোয়েস্ট ফেইল করেছে: ' . $error]));
+// Vérifie les erreurs
+if ($response === false || $error) {
+    echo json_encode(array_merge($credit, [
+        'error' => "⚠️ Erreur cURL : $error"
+    ]));
     exit;
 }
 
-// 🔎 Debug brut (pour voir ce que le serveur répond exactement)
-// Si tu veux tester, décommente la ligne suivante :
-// echo $response; exit;
-
-// Mistral AI এর পাঠানো গুপ্ত বার্তা উদ্ধার
+// Décode la réponse JSON
 $apiResponse = json_decode($response, true);
 
 // Vérifie si JSON valide
 if ($apiResponse === null) {
     echo json_encode(array_merge($credit, [
-        'error' => '⚠️ Réponse invalide (pas du JSON)',
+        'error' => "⚠️ Réponse invalide",
         'raw_response' => $response
     ]), JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
     exit;
 }
 
-// Récupère le message de l’API
-$finalMessage = isset($apiResponse['data']['message']) 
-    ? trim($apiResponse['data']['message']) 
-    : 'AI আজকে ছুটিতে আছে, কোনো উত্তর দেয়নি!';
+// Récupère le message
+$finalMessage = $apiResponse['data']['message'] ?? '⚠️ Pas de message retourné';
 
-// ফাইনাল আউটপুট ইউজারের স্ক্রিনে দেখানো
+// Affiche le résultat final
 echo json_encode(array_merge($credit, [
-    'status' => '✅ মিশন সফল!',
+    'status'  => '✅ OK',
+    'text_envoye' => $text,
     'message' => $finalMessage
 ]), JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
