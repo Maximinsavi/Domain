@@ -1,0 +1,285 @@
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RPW AutoLikers</title>
+  <style>
+    * { box-sizing: border-box; font-family: "Poppins", sans-serif; }
+    body {
+      background-color: #0a0f1c; color: #fff;
+      display: flex; flex-direction: column;
+      justify-content: center; align-items: center;
+      height: 100vh; margin: 0;
+    }
+    h1 { font-size: 2rem; color: #4da3ff; margin-bottom: 0.5rem;
+      text-shadow: 0 0 10px rgba(77,163,255,.6); }
+    .tutorial-btn {
+      background: linear-gradient(90deg,#3b82f6,#2563eb);
+      border:none; border-radius:8px; padding:6px 12px;
+      color:white; font-size:.9rem; cursor:pointer; margin-bottom:1.5rem;
+      transition:all .3s ease;
+    }
+    .tutorial-btn:hover { transform:scale(1.05);
+      background:linear-gradient(90deg,#2563eb,#3b82f6);}
+    .card {
+      background:rgba(255,255,255,.05);
+      border-radius:15px; padding:30px; width:90%; max-width:400px;
+      box-shadow:0 0 25px rgba(0,0,0,.4);
+      backdrop-filter:blur(8px); text-align:center;
+    }
+    label {display:block;text-align:left;font-size:.9rem;color:#b3e5ff;
+      margin-top:10px;margin-bottom:5px;text-shadow:0 0 6px rgba(77,163,255,.4);}
+    input,select{
+      width:100%;padding:12px 15px;margin-bottom:10px;border:2px solid transparent;
+      border-radius:10px;background:#111827;color:white;font-size:1rem;outline:none;
+      animation:rgbBorder 4s linear infinite;
+      border-image:linear-gradient(90deg,red,orange,yellow,lime,cyan,blue,violet,red) 1;
+    }
+    @keyframes rgbBorder {
+      0%{border-image-source:linear-gradient(90deg,red,orange,yellow,lime,cyan,blue,violet,red);}
+      100%{border-image-source:linear-gradient(450deg,red,orange,yellow,lime,cyan,blue,violet,red);}
+    }
+    button {
+      width:100%;background:linear-gradient(90deg,#22c55e,#16a34a);
+      border:none;border-radius:10px;padding:12px;color:white;
+      font-weight:bold;cursor:pointer;margin-top:10px;transition:all .3s ease;
+    }
+    button:disabled{opacity:.5;cursor:not-allowed;}
+    button:hover:not(:disabled){transform:scale(1.05);
+      background:linear-gradient(90deg,#16a34a,#22c55e);}
+    .loading{margin-top:10px;color:#4da3ff;font-weight:500;display:none;}
+    .response{margin-top:15px;padding:12px;background:rgba(255,255,255,.08);
+      border-radius:10px;white-space:pre-wrap;font-size:.9rem;color:#b3e5ff;}
+    footer{margin-top:20px;font-size:.9rem;color:#666;}
+    .modal{display:none;position:fixed;z-index:1000;left:0;top:0;width:100%;height:100%;
+      background:rgba(0,0,0,.8);justify-content:center;align-items:center;}
+    .modal-content{position:relative;width:90%;max-width:400px;aspect-ratio:9/16;
+      background:black;border-radius:10px;overflow:hidden;
+      box-shadow:0 0 20px rgba(0,0,0,.5);}
+    .modal iframe{width:100%;height:100%;border:none;}
+    .close{position:absolute;top:10px;right:15px;color:white;font-size:1.5rem;
+      cursor:pointer;z-index:10;}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>RPW AutoLikers</h1>
+    <p style="margin-top:-5px;color:#b3e5ff;">Tutorial how to get fb cookie</p>
+    <button class="tutorial-btn" id="openTutorial">🎥 Watch Tutorial</button>
+
+    <label for="cookie">Facebook Cookie</label>
+    <input type="text" id="cookie" placeholder="Enter your cookie" />
+
+    <label for="link">Facebook Post Link</label>
+    <input type="text" id="link" placeholder="Enter Facebook link" />
+
+    <label for="reaction">Select Reaction Type</label>
+    <select id="reaction">
+      <option value="LIKE">LIKE</option>
+      <option value="LOVE">LOVE</option>
+      <option value="CARE">CARE</option>
+      <option value="HAHA">HAHA</option>
+      <option value="WOW">WOW</option>
+      <option value="SAD">SAD</option>
+      <option value="ANGRY">ANGRY</option>
+    </select>
+
+    <button id="sendBtn">Send Boost</button>
+    <div class="loading" id="loading">⏳ Sending request...</div>
+    <div class="response" id="responseBox"></div>
+  </div>
+
+  <footer>© 2025 RPW AutoLikers</footer>
+
+  <!-- Video Popup Modal -->
+  <div class="modal" id="videoModal">
+    <div class="modal-content">
+      <span class="close" id="closeModal">&times;</span>
+      <iframe id="videoFrame" src="" allowfullscreen></iframe>
+    </div>
+  </div>
+<script>
+  const sendBtn = document.getElementById("sendBtn");
+  const responseBox = document.getElementById("responseBox");
+  const loading = document.getElementById("loading");
+  let cooldownTimer;
+
+  const COOLDOWN_KEY = "boostCooldownEnd";
+  const LIMIT_KEY = "boostLimitEnd";
+
+  // --- Restore cooldown or limit if exists ---
+  window.addEventListener("load", () => {
+    const cooldownEnd = localStorage.getItem(COOLDOWN_KEY);
+    const limitEnd = localStorage.getItem(LIMIT_KEY);
+    const now = Date.now();
+
+    if (limitEnd && now < parseInt(limitEnd)) {
+      const remainingMinutes = Math.ceil((parseInt(limitEnd) - now) / 60000);
+      startCountdownTimer(remainingMinutes, "Your daily limit has reset!", "limit");
+    } else if (cooldownEnd && now < parseInt(cooldownEnd)) {
+      const remainingMinutes = Math.ceil((parseInt(cooldownEnd) - now) / 60000);
+      startCountdownTimer(remainingMinutes, "You can boost again!", "cooldown");
+    } else {
+      localStorage.removeItem(COOLDOWN_KEY);
+      localStorage.removeItem(LIMIT_KEY);
+    }
+  });
+
+  // ---- Universal Cooldown/Limit Timer ----
+  function startCountdownTimer(minutes, endText = "You can boost again!", type = "cooldown") {
+    const endTime = Date.now() + minutes * 60 * 1000;
+
+    if (type === "limit") {
+      localStorage.setItem(LIMIT_KEY, endTime);
+    } else {
+      localStorage.setItem(COOLDOWN_KEY, endTime);
+    }
+
+    sendBtn.disabled = true;
+
+    function update() {
+      const remaining = endTime - Date.now();
+      if (remaining <= 0) {
+        clearInterval(cooldownTimer);
+        sendBtn.disabled = false;
+        sendBtn.innerText = "Send Boost";
+        responseBox.innerHTML = `✅ ${endText}`;
+        responseBox.style.color = "#4caf50";
+
+        localStorage.removeItem(COOLDOWN_KEY);
+        localStorage.removeItem(LIMIT_KEY);
+        return;
+      }
+
+      const hrs = Math.floor(remaining / 3600000);
+      const mins = Math.floor((remaining % 3600000) / 60000);
+      const secs = Math.floor((remaining % 60000) / 1000);
+
+      let display = hrs > 0 ? `${hrs}h ${mins}m` : `${mins}:${secs.toString().padStart(2, "0")}`;
+      sendBtn.innerText = type === "limit" ? `🚫 Limit ${display}` : `🕒 Wait ${display}`;
+    }
+
+    update();
+    cooldownTimer = setInterval(update, 1000);
+  }
+
+  // --- Main Boost Handler ---
+  sendBtn.addEventListener("click", async () => {
+    const cookie = document.getElementById("cookie").value.trim();
+    const link = document.getElementById("link").value.trim();
+    const reaction = document.getElementById("reaction").value;
+
+    if (!cookie || !link) {
+      responseBox.innerText = "⚠️ Please fill all fields.";
+      return;
+    }
+
+    responseBox.innerText = "";
+    responseBox.style.color = "#fff";
+    loading.style.display = "block";
+    sendBtn.disabled = true;
+    sendBtn.innerText = "⏳ Sending...";
+
+    try {
+      const res = await fetch("/api/boost", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cookie, link, reaction }),
+      });
+
+      const data = await res.json();
+      console.log("📦 Full API Response:", data);
+
+      loading.style.display = "none";
+
+      // --- SUCCESS ---
+      if (res.ok && data.success === true) {
+        const used = data.uses_used ?? "?";
+        const max = data.uses_max ?? "?";
+        const msg = data.message || "Boost sent successfully!";
+        responseBox.innerHTML = `✅ <strong>${msg}</strong><br>Uses: ${used}/${max}`;
+        responseBox.style.color = "#4caf50";
+        console.log(`✅ Success: ${msg} (${used}/${max} uses)`);
+        sendBtn.disabled = false;
+        sendBtn.innerText = "Send Boost";
+        localStorage.removeItem(COOLDOWN_KEY);
+        localStorage.removeItem(LIMIT_KEY);
+
+      // --- COOLDOWN ---
+      } else if (data.status === "cooldown") {
+        const cdMsg = data.error || "You're in cooldown.";
+        responseBox.innerHTML = `🕒 <strong>${cdMsg}</strong>`;
+        responseBox.style.color = "#ffb300";
+        console.warn(`🕒 Cooldown: ${cdMsg}`);
+
+        const match = cdMsg.match(/(\d+)\s*minute/);
+        if (match) {
+          startCountdownTimer(parseInt(match[1]), "You can boost again!", "cooldown");
+        } else {
+          sendBtn.disabled = false;
+          sendBtn.innerText = "Send Boost";
+        }
+
+      // --- DAILY LIMIT ---
+      } else if (data.status === "limit") {
+        const limitMsg = data.error || "Daily limit reached.";
+        responseBox.innerHTML = `🚫 <strong>${limitMsg}</strong>`;
+        responseBox.style.color = "#ff5252";
+        console.warn(`🚫 Limit: ${limitMsg}`);
+
+        const match = limitMsg.match(/(\d+)\s*hour.*?(\d+)\s*minute/);
+        if (match) {
+          const hours = parseInt(match[1]);
+          const minutes = parseInt(match[2]);
+          const totalMinutes = hours * 60 + minutes;
+          startCountdownTimer(totalMinutes, "Your daily limit has reset!", "limit");
+        } else {
+          sendBtn.disabled = false;
+          sendBtn.innerText = "Send Boost";
+        }
+
+      // --- OTHER ERRORS ---
+      } else {
+        const errorMsg = data.message || data.error || "Unknown API error.";
+        responseBox.innerHTML = `❌ <strong>Failed:</strong> ${errorMsg}`;
+        responseBox.style.color = "#f44336";
+        console.error("❌ API Error:", errorMsg);
+        sendBtn.disabled = false;
+        sendBtn.innerText = "Send Boost";
+      }
+
+    } catch (err) {
+      loading.style.display = "none";
+      sendBtn.disabled = false;
+      sendBtn.innerText = "Send Boost";
+      console.error("❌ Request Error:", err);
+      responseBox.innerHTML = `⚠️ <strong>Error:</strong> ${err.message}`;
+      responseBox.style.color = "#f44336";
+    }
+  });
+
+  // --- Tutorial Modal ---
+  const modal = document.getElementById("videoModal");
+  const openBtn = document.getElementById("openTutorial");
+  const closeBtn = document.getElementById("closeModal");
+  const videoFrame = document.getElementById("videoFrame");
+
+  openBtn.addEventListener("click", () => {
+    modal.style.display = "flex";
+    videoFrame.src = "https://www.youtube.com/embed/bVDBz1vx9BA";
+  });
+
+  closeBtn.addEventListener("click", () => {
+    modal.style.display = "none";
+    videoFrame.src = "";
+  });
+
+  window.addEventListener("click", e => {
+    if (e.target === modal) {
+      modal.style.display = "none";
+      videoFrame.src = "";
+    }
+  });
+      </script>
+</body>
+</html>
