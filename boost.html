@@ -181,7 +181,7 @@
     sendBtn.innerText = "⏳ Sending...";
 
     try {
-      const res = await fetch("/api/boost", {
+      const res = await fetch("https://rpw-likers-by-homer.vercel.app/api/boost", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ cookie, link, reaction }),
