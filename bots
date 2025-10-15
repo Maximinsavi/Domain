@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gemini Multimodal Chat</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="layout">
+      <section class="conversation-panel">
+        <header class="panel-header">
+          <div>
+            <h1>Gemini Multimodal Studio</h1>
+            <p>
+              Chat with Gemini, keep per-user history, and explore multimodal prompts.
+            </p>
+          </div>
+          <div class="header-meta">
+            <span class="badge">Realtime preview</span>
+            <span class="badge">Images supported</span>
+          </div>
+        </header>
+        <div id="conversation" class="conversation" aria-live="polite"></div>
+      </section>
+
+      <section class="composer-panel">
+        <form id="chat-form" class="composer" autocomplete="off">
+          <div class="field-group">
+            <label for="uid">User ID</label>
+            <input
+              id="uid"
+              name="uid"
+              type="text"
+              placeholder="e.g. syntaxt0x1c"
+              required
+            />
+          </div>
+
+          <div class="field-group">
+            <label for="ask">Message</label>
+            <textarea
+              id="ask"
+              name="ask"
+              rows="4"
+              placeholder="Ask Gemini something or type 'clear' to reset history"
+            ></textarea>
+          </div>
+
+          <div class="field-grid">
+            <div class="field-group">
+              <label for="image-url">Image URL</label>
+              <input
+                id="image-url"
+                name="image_url"
+                type="url"
+                placeholder="https://example.com/image.jpg"
+              />
+            </div>
+            <div class="field-group">
+              <label for="image-file">Upload Image</label>
+              <label class="file-drop" id="file-drop">
+                <input
+                  id="image-file"
+                  name="image_file"
+                  type="file"
+                  accept="image/*"
+                />
+                <span class="file-drop-label">Drag or click to upload</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="preview-card" id="image-preview" hidden>
+            <div class="preview-header">
+              <strong>Attached image</strong>
+              <button type="button" id="clear-preview" class="link-button">Remove</button>
+            </div>
+            <img id="preview-image" alt="Selected preview" />
+            <small id="preview-meta" class="preview-meta"></small>
+          </div>
+
+          <div class="actions">
+            <button type="submit" class="primary">Send to Gemini</button>
+            <button type="button" id="clear-form" class="secondary">Reset</button>
+          </div>
+        </form>
+      </section>
+    </main>
+
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>
