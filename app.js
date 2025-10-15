@@ -169,7 +169,7 @@ form.addEventListener("submit", async (event) => {
   setLoading(true);
 
   try {
-    const response = await fetch("/gemini", {
+    const response = await fetch("//gemini-web-api.onrender.com/gemini", {
       method: "POST",
       body: formData,
     });
