@@ -1,5 +1,4 @@
-
-  var form = document.getElementById("chat-form");
+var form = document.getElementById("chat-form");
   var conversationEl = document.getElementById("conversation");
   var imageUrlInput = document.getElementById("image-url");
   var fileInput = document.getElementById("image-file");
@@ -9,6 +8,7 @@
   var previewMeta = document.getElementById("preview-meta");
   var clearPreviewBtn = document.getElementById("clear-preview");
   var clearFormBtn = document.getElementById("clear-form");
+  var sendBtn = form.querySelector("button.primary");
 
   function renderConversation(history) {
     conversationEl.innerHTML = "";
@@ -45,12 +45,6 @@
     }
 
     conversationEl.scrollTop = conversationEl.scrollHeight;
-  }
-
-  function setLoading(isLoading) {
-    var primaryButton = form.querySelector("button.primary");
-    primaryButton.disabled = isLoading;
-    primaryButton.textContent = isLoading ? "Sending…" : "Send to Gemini";
   }
 
   function clearPreview() {
@@ -93,51 +87,28 @@
     showPreview({ src: url, label: url });
   }
 
-  fileInput.addEventListener("change", function () {
+  fileInput.onchange = function () {
     var file = fileInput.files[0];
     updatePreviewFromFile(file);
-  });
+  };
 
-  imageUrlInput.addEventListener("input", function (e) {
+  imageUrlInput.oninput = function (e) {
     var value = e.target.value.trim();
     updatePreviewFromUrl(value);
-  });
+  };
 
-  if (fileDrop) {
-    ["dragenter", "dragover"].forEach(function (ev) {
-      fileDrop.addEventListener(ev, function (e) {
-        e.preventDefault();
-        fileDrop.classList.add("dragging");
-      });
-    });
-    ["dragleave", "drop"].forEach(function (ev) {
-      fileDrop.addEventListener(ev, function (e) {
-        e.preventDefault();
-        fileDrop.classList.remove("dragging");
-      });
-    });
-    fileDrop.addEventListener("drop", function (e) {
-      var file = e.dataTransfer.files[0];
-      if (file) {
-        fileInput.files = e.dataTransfer.files;
-        updatePreviewFromFile(file);
-      }
-    });
-  }
-
-  clearPreviewBtn.addEventListener("click", function () {
+  clearPreviewBtn.onclick = function () {
     clearPreview();
     imageUrlInput.value = "";
-  });
+  };
 
-  clearFormBtn.addEventListener("click", function () {
+  clearFormBtn.onclick = function () {
     form.reset();
     clearPreview();
-  });
+  };
 
-  form.addEventListener("submit", function (event) {
-    event.preventDefault();
-
+  // === Fonction principale, lancée au clic ===
+  sendBtn.onclick = function () {
     var uid = form.uid.value.trim();
     var ask = form.ask.value.trim();
     var imageUrl = imageUrlInput.value.trim();
@@ -153,12 +124,10 @@
     formData.set("ask", ask);
     formData.set("include_history", "true");
     if (imageUrl) formData.set("image_url", imageUrl);
-    if (imageFile && ask.toLowerCase() !== "clear")
+    if (imageFile && ask.toLowerCase() !== "clear") {
       formData.set("image_file", imageFile);
+    }
 
-    setLoading(true);
-
-    // requête simple compatible anciens navigateurs
     fetch("//gemini-web-api.onrender.com/gemini", {
       method: "POST",
       body: formData,
@@ -170,7 +139,6 @@
       .then(function (payload) {
         var history = Array.isArray(payload.history) ? payload.history : [];
 
-        // Afficher réponse directement
         renderConversation(history);
 
         if (!history.length && payload.response) {
@@ -185,7 +153,6 @@
           conversationEl.appendChild(notice);
         }
 
-        // Défilement et nettoyage
         conversationEl.scrollTop = conversationEl.scrollHeight;
         form.ask.value = "";
         if (ask.toLowerCase() === "clear") {
@@ -195,8 +162,5 @@
       })
       .catch(function (err) {
         alert("Error: " + err.message);
-      })
-      .finally(function () {
-        setLoading(false);
       });
-  });
+  };
