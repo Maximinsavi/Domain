@@ -135,8 +135,9 @@
     clearPreview();
   });
 
-  form.addEventListener("submit", function (event) {
-    event.preventDefault();
+  function sendMessage() {
+  // (tu gardes le même contenu que dans ce bloc)
+};
 
     var uid = form.uid.value.trim();
     var ask = form.ask.value.trim();
