@@ -1,4 +1,5 @@
-var form = document.getElementById("chat-form");
+
+  var form = document.getElementById("chat-form");
   var conversationEl = document.getElementById("conversation");
   var imageUrlInput = document.getElementById("image-url");
   var fileInput = document.getElementById("image-file");
@@ -8,7 +9,6 @@ var form = document.getElementById("chat-form");
   var previewMeta = document.getElementById("preview-meta");
   var clearPreviewBtn = document.getElementById("clear-preview");
   var clearFormBtn = document.getElementById("clear-form");
-  var sendBtn = form.querySelector("button.primary");
 
   function renderConversation(history) {
     conversationEl.innerHTML = "";
@@ -45,6 +45,12 @@ var form = document.getElementById("chat-form");
     }
 
     conversationEl.scrollTop = conversationEl.scrollHeight;
+  }
+
+  function setLoading(isLoading) {
+    var primaryButton = form.querySelector("button.primary");
+    primaryButton.disabled = isLoading;
+    primaryButton.textContent = isLoading ? "Sending…" : "Send to Gemini";
   }
 
   function clearPreview() {
@@ -87,28 +93,51 @@ var form = document.getElementById("chat-form");
     showPreview({ src: url, label: url });
   }
 
-  fileInput.onchange = function () {
+  fileInput.addEventListener("change", function () {
     var file = fileInput.files[0];
     updatePreviewFromFile(file);
-  };
+  });
 
-  imageUrlInput.oninput = function (e) {
+  imageUrlInput.addEventListener("input", function (e) {
     var value = e.target.value.trim();
     updatePreviewFromUrl(value);
-  };
+  });
 
-  clearPreviewBtn.onclick = function () {
+  if (fileDrop) {
+    ["dragenter", "dragover"].forEach(function (ev) {
+      fileDrop.addEventListener(ev, function (e) {
+        e.preventDefault();
+        fileDrop.classList.add("dragging");
+      });
+    });
+    ["dragleave", "drop"].forEach(function (ev) {
+      fileDrop.addEventListener(ev, function (e) {
+        e.preventDefault();
+        fileDrop.classList.remove("dragging");
+      });
+    });
+    fileDrop.addEventListener("drop", function (e) {
+      var file = e.dataTransfer.files[0];
+      if (file) {
+        fileInput.files = e.dataTransfer.files;
+        updatePreviewFromFile(file);
+      }
+    });
+  }
+
+  clearPreviewBtn.addEventListener("click", function () {
     clearPreview();
     imageUrlInput.value = "";
-  };
+  });
 
-  clearFormBtn.onclick = function () {
+  clearFormBtn.addEventListener("click", function () {
     form.reset();
     clearPreview();
-  };
+  });
 
-  // === Fonction principale, lancée au clic ===
-  sendBtn.onclick = function () {
+  form.addEventListener("submit", function (event) {
+    event.preventDefault();
+
     var uid = form.uid.value.trim();
     var ask = form.ask.value.trim();
     var imageUrl = imageUrlInput.value.trim();
@@ -124,10 +153,12 @@ var form = document.getElementById("chat-form");
     formData.set("ask", ask);
     formData.set("include_history", "true");
     if (imageUrl) formData.set("image_url", imageUrl);
-    if (imageFile && ask.toLowerCase() !== "clear") {
+    if (imageFile && ask.toLowerCase() !== "clear")
       formData.set("image_file", imageFile);
-    }
 
+    setLoading(true);
+
+    // requête simple compatible anciens navigateurs
     fetch("//gemini-web-api.onrender.com/gemini", {
       method: "POST",
       body: formData,
@@ -139,6 +170,7 @@ var form = document.getElementById("chat-form");
       .then(function (payload) {
         var history = Array.isArray(payload.history) ? payload.history : [];
 
+        // Afficher réponse directement
         renderConversation(history);
 
         if (!history.length && payload.response) {
@@ -153,6 +185,7 @@ var form = document.getElementById("chat-form");
           conversationEl.appendChild(notice);
         }
 
+        // Défilement et nettoyage
         conversationEl.scrollTop = conversationEl.scrollHeight;
         form.ask.value = "";
         if (ask.toLowerCase() === "clear") {
@@ -162,5 +195,8 @@ var form = document.getElementById("chat-form");
       })
       .catch(function (err) {
         alert("Error: " + err.message);
+      })
+      .finally(function () {
+        setLoading(false);
       });
-  };
+  });
