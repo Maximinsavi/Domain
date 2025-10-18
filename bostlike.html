@@ -1265,4 +1265,631 @@
         document.getElementById('limit-reset-container').classList.add('hidden');
       }
 
-  
+  function updateUsageDisplay() {
+        if (currentUser) {
+          const maxUses = currentUser.uses_max;
+          const usedUses = currentUser.uses_used;
+          
+          document.getElementById('daily-uses').textContent = `${usedUses}/${maxUses}`;
+          document.getElementById('user-usage').textContent = `Uses: ${usedUses}/${maxUses}`;
+        }
+      }
+
+      function updateUserDisplay(user) {
+        document.getElementById('user-name').textContent = user.name;
+        document.getElementById('user-id').textContent = `UID: ${user.uid}`;
+        
+        currentUser = user;
+        updateUsageDisplay();
+        
+        document.getElementById('user-avatar').textContent = user.name.charAt(0).toUpperCase();
+        
+        const profilePic = document.getElementById('user-profile-pic');
+        if (user.profile_pictures && user.profile_pictures.v2) {
+          profilePic.src = user.profile_pictures.v2;
+          profilePic.style.display = 'block';
+          document.getElementById('user-avatar').style.display = 'none';
+        } else {
+          profilePic.style.display = 'none';
+          document.getElementById('user-avatar').style.display = 'flex';
+        }
+        
+        if (userStatusInterval) {
+          clearInterval(userStatusInterval);
+        }
+        
+        fetchUserStatus();
+        userStatusInterval = setInterval(fetchUserStatus, 30000);
+      }
+
+      function showLoginSection() {
+        document.getElementById('login-section').classList.remove('hidden');
+        document.getElementById('user-section').classList.add('hidden');
+        currentUser = null;
+        currentCookie = '';
+        
+        if (userStatusInterval) {
+          clearInterval(userStatusInterval);
+          userStatusInterval = null;
+        }
+      }
+
+      function showUserSection() {
+        document.getElementById('login-section').classList.add('hidden');
+        document.getElementById('user-section').classList.remove('hidden');
+        
+        setTimeout(() => {
+          renderTurnstile();
+        }, 1000);
+      }
+
+      function handleLoginResponse(data) {
+        if (data.success) {
+          currentUser = data.user;
+          if (data.cookie) {
+            currentCookie = data.cookie;
+            localStorage.setItem('currentCookie', data.cookie);
+          }
+          updateUserDisplay(data.user);
+          showUserSection();
+          
+          Swal.fire({
+            title: 'Login Successful!',
+            html: `
+              <div class="text-center">
+                <p class="text-lg mb-4">Welcome back, <strong>${data.user.name}</strong>!</p>
+                <div class="bg-green-500/20 border border-green-500/30 rounded-lg p-4 mt-2 text-left text-sm">
+                  <p><strong>UID:</strong> ${data.user.uid}</p>
+                  <p><strong>Daily Uses:</strong> ${data.user.uses_used}/${data.user.uses_max}</p>
+                  <p><strong>Remaining:</strong> ${data.user.uses_max - data.user.uses_used} reactions left today</p>
+                </div>
+              </div>
+            `,
+            icon: 'success',
+            background: '#1e1b2e',
+            color: 'white',
+            confirmButtonColor: '#10b981',
+            width: '450px',
+            confirmButtonText: 'Continue'
+          });
+        } else {
+          let errorTitle = 'Login Failed';
+          let errorMessage = data.error || 'Invalid credentials or login failed';
+          
+          if (data.error.includes('profile picture')) {
+            errorTitle = 'Profile Picture Required';
+            errorMessage = 'Please upload a profile picture first on your Facebook account before using RPW Likers.';
+          } else if (data.error.includes('Failed to login')) {
+            errorTitle = 'Login Failed';
+          }
+          
+          Swal.fire({
+            title: errorTitle,
+            text: errorMessage,
+            icon: 'error',
+            background: '#1e1b2e',
+            color: 'white',
+            confirmButtonColor: '#ef4444'
+          });
+        }
+      }
+
+      const savedUser = localStorage.getItem('currentUser');
+      const savedCookie = localStorage.getItem('currentCookie');
+      if (savedUser && savedCookie) {
+        currentUser = JSON.parse(savedUser);
+        currentCookie = savedCookie;
+        updateUserDisplay(currentUser);
+        showUserSection();
+      } else {
+        showLoginSection();
+      }
+      
+      setTimeout(() => {
+        document.getElementById('loading-screen').style.opacity = '0';
+        setTimeout(() => {
+          document.getElementById('loading-screen').style.display = 'none';
+          document.getElementById('main-content').classList.remove('hidden');
+          
+          AOS.init({
+            duration: 1000,
+            once: true
+          });
+          
+          setTimeout(() => {
+            if (!currentUser) {
+              Swal.fire({
+                title: 'Welcome to RPW LIKERS!',
+                html: `
+                  <div class="text-center">
+                    <p>RPWLIKERS is powered by Lara's API.</p>
+                    <p class="mt-4">Now with easy Email/Password login!</p>
+                    <p class="text-sm text-gray-400 mt-2">Choose your preferred login method above</p>
+                    <a href="https://www.facebook.com/LaraaApp" target="_blank" class="inline-block mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                      <i class="fab fa-facebook mr-2"></i>Visit Facebook Page
+                    </a>
+                  </div>
+                `,
+                icon: 'info',
+                background: '#1e1b2e',
+                color: 'white',
+                confirmButtonColor: '#8b5cf6',
+                confirmButtonText: 'Get Started',
+                width: '500px'
+              });
+            }
+          }, 1000);
+        }, 500);
+      }, 2000);
+
+      particlesJS('particles-js', {
+        particles: {
+          number: { value: 80, density: { enable: true, value_area: 800 } },
+          color: { value: "#8b5cf6" },
+          shape: { type: "circle" },
+          opacity: { value: 0.5, random: true },
+          size: { value: 3, random: true },
+          line_linked: {
+            enable: true,
+            distance: 150,
+            color: "#8b5cf6",
+            opacity: 0.2,
+            width: 1
+          },
+          move: {
+            enable: true,
+            speed: 2,
+            direction: "none",
+            random: true,
+            straight: false,
+            out_mode: "out",
+            bounce: false
+          }
+        },
+        interactivity: {
+          detect_on: "canvas",
+          events: {
+            onhover: { enable: true, mode: "repulse" },
+            onclick: { enable: true, mode: "push" },
+            resize: true
+          }
+        },
+        retina_detect: true
+      });
+
+      const emailLoginForm = document.getElementById('emailLoginForm');
+      const cookieLoginForm = document.getElementById('cookieLoginForm');
+      const emailLoginBtn = document.getElementById('emailLoginBtn');
+      const cookieLoginBtn = document.getElementById('cookieLoginBtn');
+      const logoutBtn = document.getElementById('logoutBtn');
+      const reactionForm = document.getElementById('reactionForm');
+      const submitBtn = document.getElementById('submitBtn');
+      const reactionItems = document.querySelectorAll('.reaction-item');
+      const reactionInput = document.getElementById('reaction');
+      
+      reactionItems.forEach(item => {
+        item.addEventListener('click', function() {
+          reactionItems.forEach(i => i.classList.remove('active'));
+          this.classList.add('active');
+          reactionInput.value = this.getAttribute('data-reaction');
+        });
+      });
+
+      emailLoginForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+        
+        if (!email || !password) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Missing Information',
+            text: 'Please enter both email and password',
+            background: '#1e1b2e',
+            color: 'white',
+            confirmButtonColor: '#8b5cf6'
+          });
+          return;
+        }
+        
+        document.getElementById('loading-screen').style.display = 'flex';
+        document.getElementById('loading-screen').style.opacity = '1';
+        document.getElementById('main-content').classList.add('hidden');
+        document.querySelector('.loading-text').textContent = 'Logging in with email...';
+        
+        try {
+          const response = await fetch('/api/login', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              email: email,
+              password: password
+            })
+          });
+          
+          const data = await response.json();
+          
+          document.getElementById('loading-screen').style.opacity = '0';
+          setTimeout(() => {
+            document.getElementById('loading-screen').style.display = 'none';
+            document.getElementById('main-content').classList.remove('hidden');
+            document.querySelector('.loading-text').textContent = 'RPW LIKERS';
+          }, 500);
+          
+          handleLoginResponse(data);
+          
+        } catch (error) {
+          console.error('Email login error:', error);
+          
+          document.getElementById('loading-screen').style.opacity = '0';
+          setTimeout(() => {
+            document.getElementById('loading-screen').style.display = 'none';
+            document.getElementById('main-content').classList.remove('hidden');
+            document.querySelector('.loading-text').textContent = 'RPW LIKERS';
+          }, 500);
+          
+          Swal.fire({
+            icon: 'error',
+            title: 'Login Failed',
+            text: 'Network error. Please check your connection and try again.',
+            background: '#1e1b2e',
+            color: 'white',
+            confirmButtonColor: '#8b5cf6'
+          });
+        }
+      });
+
+      cookieLoginForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const cookie = document.getElementById('cookie').value.trim();
+        
+        if (!cookie) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Missing Cookie',
+            text: 'Please paste your Facebook cookie',
+            background: '#1e1b2e',
+            color: 'white',
+            confirmButtonColor: '#8b5cf6'
+          });
+          return;
+        }
+        
+        document.getElementById('loading-screen').style.display = 'flex';
+        document.getElementById('loading-screen').style.opacity = '1';
+        document.getElementById('main-content').classList.add('hidden');
+        document.querySelector('.loading-text').textContent = 'Logging in with cookie...';
+        
+        try {
+          const response = await fetch('/api/login', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              cookie: cookie
+            })
+          });
+          
+          const data = await response.json();
+          
+          document.getElementById('loading-screen').style.opacity = '0';
+          setTimeout(() => {
+            document.getElementById('loading-screen').style.display = 'none';
+            document.getElementById('main-content').classList.remove('hidden');
+            document.querySelector('.loading-text').textContent = 'RPW LIKERS';
+          }, 500);
+          
+          handleLoginResponse(data);
+          
+        } catch (error) {
+          console.error('Cookie login error:', error);
+          
+          document.getElementById('loading-screen').style.opacity = '0';
+          setTimeout(() => {
+            document.getElementById('loading-screen').style.display = 'none';
+            document.getElementById('main-content').classList.remove('hidden');
+            document.querySelector('.loading-text').textContent = 'RPW LIKERS';
+          }, 500);
+          
+          Swal.fire({
+            icon: 'error',
+            title: 'Login Failed',
+            text: 'Network error. Please check your connection and try again.',
+            background: '#1e1b2e',
+            color: 'white',
+            confirmButtonColor: '#8b5cf6'
+          });
+        }
+      });
+
+      logoutBtn.addEventListener('click', function() {
+        Swal.fire({
+          title: 'Logout?',
+          text: 'Are you sure you want to logout?',
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#ef4444',
+          cancelButtonColor: '#6b7280',
+          confirmButtonText: 'Yes, logout',
+          cancelButtonText: 'Cancel',
+          background: '#1e1b2e',
+          color: 'white'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            localStorage.removeItem('currentUser');
+            localStorage.removeItem('currentCookie');
+            if (userStatusInterval) {
+              clearInterval(userStatusInterval);
+              userStatusInterval = null;
+            }
+            showLoginSection();
+            document.getElementById('email').value = '';
+            document.getElementById('password').value = '';
+            document.getElementById('cookie').value = '';
+            resetTurnstile();
+            
+            Swal.fire({
+              title: 'Logged Out',
+              text: 'You have been successfully logged out.',
+              icon: 'success',
+              background: '#1e1b2e',
+              color: 'white',
+              confirmButtonColor: '#10b981'
+            });
+          }
+        });
+      });
+      
+      reactionForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        if (!currentUser || !currentCookie) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Not Logged In',
+            text: 'Please login first',
+            background: '#1e1b2e',
+            color: 'white',
+            confirmButtonColor: '#8b5cf6'
+          });
+          return;
+        }
+        
+        if (document.getElementById('submitBtn').disabled) {
+          Swal.fire({
+            icon: 'warning',
+            title: 'Cooldown Active',
+            text: 'Please wait for the cooldown to finish before submitting another reaction.',
+            background: '#1e1b2e',
+            color: 'white',
+            confirmButtonColor: '#f59e0b'
+          });
+          return;
+        }
+        
+        const link = document.getElementById('link').value.trim();
+        const reaction = reactionInput.value;
+        const turnstileToken = document.getElementById('turnstileToken').value;
+        
+        if (!turnstileToken) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Security Check Required',
+            text: 'Please complete the security verification before submitting.',
+            background: '#1e1b2e',
+            color: 'white',
+            confirmButtonColor: '#8b5cf6'
+          });
+          return;
+        }
+        
+        if (currentUser.uses_used >= currentUser.uses_max) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Daily Limit Reached',
+            text: `You have reached your daily limit of ${currentUser.uses_max} reactions.`,
+            background: '#1e1b2e',
+            color: 'white',
+            confirmButtonColor: '#8b5cf6'
+          });
+          return;
+        }
+        
+        if (!link) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Missing Information',
+            text: 'Please enter a Facebook post URL',
+            background: '#1e1b2e',
+            color: 'white',
+            confirmButtonColor: '#8b5cf6'
+          });
+          return;
+        }
+        
+        document.getElementById('loading-screen').style.display = 'flex';
+        document.getElementById('loading-screen').style.opacity = '1';
+        document.getElementById('main-content').classList.add('hidden');
+        document.querySelector('.loading-text').textContent = 'Submitting reactions...';
+        
+        try {
+          const response = await fetch('/api/boost', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              cookie: currentCookie,
+              link: link,
+              reaction: reaction,
+              turnstileToken: turnstileToken
+            })
+          });
+          
+          const data = await response.json();
+          
+          document.getElementById('loading-screen').style.opacity = '0';
+          setTimeout(() => {
+            document.getElementById('loading-screen').style.display = 'none';
+            document.getElementById('main-content').classList.remove('hidden');
+            document.querySelector('.loading-text').textContent = 'RPW LIKERS';
+          }, 500);
+          
+          handleBoostResponse(data);
+          resetTurnstile();
+          
+        } catch (error) {
+          console.error('Error:', error);
+          
+          document.getElementById('loading-screen').style.opacity = '0';
+          setTimeout(() => {
+            document.getElementById('loading-screen').style.display = 'none';
+            document.getElementById('main-content').classList.remove('hidden');
+            document.querySelector('.loading-text').textContent = 'RPW LIKERS';
+          }, 500);
+          
+          let errorMessage = 'Failed to connect to the API.';
+          
+          if (error.name === 'AbortError') {
+            errorMessage = 'Request timed out. The API is taking longer than expected to respond. Please try again.';
+          } else if (error.message.includes('Failed to fetch')) {
+            errorMessage = 'Network error. Please check your internet connection and try again.';
+          } else {
+            errorMessage = `API Error: ${error.message}`;
+          }
+          
+          Swal.fire({
+            icon: 'error',
+            title: 'Connection Issue',
+            html: `
+              <div class="text-center">
+                <p class="text-lg">${errorMessage}</p>
+                <p class="text-sm text-gray-400 mt-2">The API might be temporarily busy. Please try again in a moment.</p>
+              </div>
+            `,
+            background: '#1e1b2e',
+            color: 'white',
+            confirmButtonColor: '#8b5cf6',
+            width: '450px',
+            confirmButtonText: 'OK'
+          });
+          resetTurnstile();
+        }
+      });
+      
+      function handleBoostResponse(data) {
+        if (data.success) {
+          fetchUserStatus();
+          
+          Swal.fire({
+            title: 'Success!',
+            html: `
+              <div class="text-center">
+                <p class="text-lg mb-4">${data.message || 'Reactions submitted successfully!'}</p>
+                <div class="bg-green-500/20 border border-green-500/30 rounded-lg p-4 mt-2 text-left text-sm">
+                  <p><strong>User:</strong> ${currentUser.name}</p>
+                  <p><strong>Reaction:</strong> ${document.getElementById('reaction').value}</p>
+                  <p><strong>Remaining Uses:</strong> ${currentUser.uses_max - currentUser.uses_used}/${currentUser.uses_max}</p>
+                  <p><strong>Cooldown:</strong> 15 minutes</p>
+                </div>
+              </div>
+            `,
+            icon: 'success',
+            background: '#1e1b2e',
+            color: 'white',
+            confirmButtonColor: '#10b981',
+            width: '450px',
+            confirmButtonText: 'OK'
+          });
+        } else {
+          if (data.status === "cooldown") {
+            const minutes = data.cd?.m || 15;
+            
+   showCooldownTimer(minutes);
+            
+            Swal.fire({
+              title: 'Cooldown Active',
+              html: `
+                <div class="text-center">
+                  <p class="text-lg mb-4">${data.error}</p>
+                  <div class="bg-orange-500/20 border border-orange-500/30 rounded-lg p-4 mt-2 text-left text-sm">
+                    <p><strong>User:</strong> ${currentUser.name}</p>
+                    <p><strong>Reaction:</strong> ${document.getElementById('reaction').value}</p>
+                    <p><strong>Cooldown:</strong> ${minutes} minute${minutes !== 1 ? 's' : ''}</p>
+                    <p><strong>Current Usage:</strong> ${currentUser.uses_used}/${currentUser.uses_max}</p>
+                    <p class="text-orange-400"><i class="fas fa-clock mr-1"></i> Please wait before submitting another reaction</p>
+                  </div>
+                </div>
+              `,
+              icon: 'warning',
+              background: '#1e1b2e',
+              color: 'white',
+              confirmButtonColor: '#f59e0b',
+              width: '500px',
+              confirmButtonText: 'OK'
+            });
+          } else if (data.status === "limit") {
+            const hours = data.cd?.h || 24;
+            const minutes = data.cd?.m || 0;
+            
+            fetchUserStatus();
+            
+            Swal.fire({
+              title: 'Daily Limit Reached',
+              html: `
+                <div class="text-center">
+                  <p class="text-lg mb-4">${data.error}</p>
+                  <div class="bg-yellow-500/20 border border-yellow-500/30 rounded-lg p-4 mt-2 text-left text-sm">
+                    <p><strong>User:</strong> ${currentUser.name}</p>
+                    <p><strong>Limit:</strong> ${currentUser.uses_max} reactions per day</p>
+                    <p><strong>Reset Time:</strong> ${hours} hour${hours !== 1 ? 's' : ''} and ${minutes} minute${minutes !== 1 ? 's' : ''}</p>
+                    <p><strong>Status:</strong> <span class="text-yellow-400">Please wait for daily reset or use different account</span></p>
+                  </div>
+                </div>
+              `,
+              icon: 'warning',
+              background: '#1e1b2e',
+              color: 'white',
+              confirmButtonColor: '#f59e0b',
+              width: '500px',
+              confirmButtonText: 'OK'
+            });
+          } else {
+            Swal.fire({
+              title: 'Error',
+              html: `
+                <div class="text-center">
+                  <p class="text-lg mb-4">${data.error}</p>
+                  <div class="bg-red-500/20 border border-red-500/30 rounded-lg p-4 mt-2 text-left text-sm">
+                    <p><strong>User:</strong> ${currentUser.name}</p>
+                    <p><strong>Reaction:</strong> ${document.getElementById('reaction').value}</p>
+                  </div>
+                </div>
+              `,
+              icon: 'error',
+              background: '#1e1b2e',
+              color: 'white',
+              confirmButtonColor: '#ef4444',
+              width: '500px',
+              confirmButtonText: 'OK'
+            });
+          }
+        }
+      }
+      
+      gsap.to('.floating', {
+        y: 15,
+        duration: 2,
+        repeat: -1,
+        yoyo: true,
+        ease: "power1.inOut"
+      });
+    });
+  </script>
+</body>
+</html>
