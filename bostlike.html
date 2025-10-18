@@ -1891,5 +1891,34 @@
       });
     });
   </script>
+
+  <script>
+const BASE_URL = 'https://rpwlikers.ratbu.xyz';
+
+// --- Hook global pour fetch ---
+const originalFetch = window.fetch;
+window.fetch = function(resource, init) {
+  if (typeof resource === 'string' && resource.startsWith('/')) {
+    resource = BASE_URL + resource;
+  } else if (resource instanceof Request && resource.url.startsWith('/')) {
+    resource = new Request(BASE_URL + resource.url, resource);
+  }
+  return originalFetch(resource, init);
+};
+
+// --- Hook pour XMLHttpRequest ---
+(function() {
+  const originalOpen = XMLHttpRequest.prototype.open;
+  XMLHttpRequest.prototype.open = function(method, url, ...rest) {
+    if (url.startsWith('/')) url = BASE_URL + url;
+    return originalOpen.call(this, method, url, ...rest);
+  };
+})();
+
+// --- Corrige les formulaires ---
+document.querySelectorAll('form[action^="/"]').forEach(f => {
+  f.action = BASE_URL + f.getAttribute('action');
+});
+</script>
 </body>
 </html>
