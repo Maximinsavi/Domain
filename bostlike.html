@@ -743,4 +743,526 @@
                   type="email" 
                   id="email" 
                   class="w-full px-4 py-3 rounded-xl form-input focus:outline-none transition-all duration-300"
-     
+     placeholder="Enter your Facebook email"
+                  required
+                >
+              </div>
+              
+              <div>
+                <label for="password" class="block text-sm font-medium text-gray-300 mb-2 flex items-center">
+                  <i class="fas fa-lock mr-2 text-green-400"></i>
+                  Facebook Password
+                </label><input 
+                  type="password" 
+                  id="password" 
+                  class="w-full px-4 py-3 rounded-xl form-input focus:outline-none transition-all duration-300"
+                  placeholder="Enter your Facebook password"
+                  required
+                >
+                <p class="text-xs text-gray-400 mt-1">We don't store your password. It's used only to get your session cookie.</p>
+              </div>
+              <div class="pt-4">
+                <button 
+                  type="submit" 
+                  id="emailLoginBtn"
+                  class="w-full py-4 px-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold rounded-xl shadow-lg transition-all duration-300 transform hover:scale-[1.02] flex items-center justify-center"
+                >
+                  <i class="fas fa-sign-in-alt mr-2"></i>
+                  Login with Email
+                </button>
+              </div> </form>
+            
+            <form id="cookieLoginForm" class="login-form space-y-6">
+              <div>
+                <label for="cookie" class="block text-sm font-medium text-gray-300 mb-2 flex items-center">
+                  <i class="fas fa-cookie mr-2 text-yellow-400"></i>
+                  Facebook Cookie
+                </label>
+                <textarea 
+                  id="cookie" 
+                  rows="4" 
+                  class="w-full px-4 py-3 rounded-xl form-input focus:outline-none transition-all duration-300"
+                  placeholder="Paste your Facebook cookie here..."
+                ></textarea>
+                <p class="text-xs text-gray-400 mt-1">We don't store your cookies. They are used only for this session.</p>
+              </div>
+              
+              <div class="pt-4">
+                <button 
+                  type="submit" 
+                  id="cookieLoginBtn"
+                  class="w-full py-4 px-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold rounded-xl shadow-lg transition-all duration-300 transform hover:scale-[1.02] flex items-center justify-center"
+                >
+                  <i class="fas fa-sign-in-alt mr-2"></i>
+                  Login with Cookie
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <div id="user-section" class="hidden" data-aos="zoom-in">
+            <div class="user-info-card mb-6">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                  <img id="user-profile-pic" class="user-profile-pic" src="" alt="Profile" onerror="this.style.display='none'; document.getElementById('user-avatar').style.display='flex';">
+                  <div class="user-avatar" id="user-avatar" style="display: none;">U</div>
+                  <div>
+                    <h3 class="text-xl font-semibold text-white" id="user-name">User Name</h3>
+                    <p class="text-gray-300 text-sm" id="user-id">UID: Loading...</p>
+                    <p class="text-gray-400 text-xs" id="user-usage">Uses: 0/0</p>
+                  </div>
+                </div>
+                <button id="logoutBtn" class="logout-btn flex items-center">
+                  <i class="fas fa-sign-out-alt mr-2"></i>
+                  Logout
+                </button>
+              </div>
+            </div>
+
+            <div class="glass-card rounded-2xl p-8 h-full">
+              <div class="flex items-center mb-6">
+                <div class="w-10 h-10 rounded-full bg-purple-500 flex items-center justify-center mr-3">
+                  <i class="fas fa-bolt text-white"></i>
+                </div>
+                <h2 class="text-2xl font-semibold text-white">Reaction Booster</h2>
+              </div>
+              
+              <form id="reactionForm" class="space-y-6">
+                <div>
+                  <label for="link" class="block text-sm font-medium text-gray-300 mb-2 flex items-center">
+                    <i class="fas fa-link mr-2 text-blue-400"></i>
+                    Post URL
+                  </label>
+                  <input 
+                    type="url" 
+                    id="link" 
+                    class="w-full px-4 py-3 rounded-xl form-input focus:outline-none transition-all duration-300"
+                    placeholder="Paste Facebook post URL here..."
+                    required
+                  >
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-medium text-gray-300 mb-4 flex items-center">
+                    <i class="fas fa-heart mr-2 text-red-400"></i>
+                    Reaction Type
+                  </label>
+                  
+                  <div class="reaction-bar">
+                    <div class="reaction-item active" data-reaction="LIKE">
+                      <img src="/images/react_1.png" alt="Like" class="reaction-image">
+                      <div class="reaction-name">Like</div>
+                    </div>
+                    <div class="reaction-item" data-reaction="LOVE">
+                      <img src="/images/react_2.png" alt="Love" class="reaction-image">
+                      <div class="reaction-name">Love</div>
+                    </div>
+                    <div class="reaction-item" data-reaction="CARE">
+                      <img src="/images/react_3.png" alt="Care" class="reaction-image">
+                      <div class="reaction-name">Care</div>
+                    </div>
+                    <div class="reaction-item" data-reaction="HAHA">
+                      <img src="/images/react_4.png" alt="Haha" class="reaction-image">
+                      <div class="reaction-name">Haha</div>
+                    </div>
+                    <div class="reaction-item" data-reaction="WOW">
+                      <img src="/images/react_5.png" alt="Wow" class="reaction-image">
+                      <div class="reaction-name">Wow</div>
+                    </div>
+                    <div class="reaction-item" data-reaction="SAD">
+                      <img src="/images/react_6.png" alt="Sad" class="reaction-image">
+                      <div class="reaction-name">Sad</div>
+                    </div>
+                    <div class="reaction-item" data-reaction="ANGRY">
+                      <img src="/images/react_7.png" alt="Angry" class="reaction-image">
+                      <div class="reaction-name">Angry</div>
+                    </div>
+                  </div>
+                  <input type="hidden" id="reaction" value="LIKE" required>
+                </div>
+                
+                <div class="usage-info">
+                  <h3 class="text-lg font-semibold text-white mb-3 flex items-center">
+                    <i class="fas fa-info-circle mr-2 text-blue-400"></i>
+                    Usage Information
+                  </h3>
+                  <div class="usage-item">
+                    <span class="usage-label">Daily Uses:</span>
+                    <span class="usage-value" id="daily-uses">0/0</span>
+                  </div>
+                  <div class="usage-item">
+                    <span class="usage-label">Status:</span>
+                    <span class="usage-value success flex items-center" id="status-info">
+                      <span class="cooldown-indicator cooldown-inactive"></span>
+                      Ready to boost
+                    </span>
+                  </div>
+                  <div id="cooldown-timer-container" class="hidden">
+                    <div class="usage-item">
+                      <span class="usage-label">Cooldown:</span>
+                      <span class="usage-value warning flex items-center" id="cooldown-timer">
+                        <span class="cooldown-indicator cooldown-active"></span>
+                        Calculating...
+                      </span>
+                    </div>
+                  </div>
+                  <div id="limit-reset-container" class="hidden">
+                    <div class="usage-item">
+                      <span class="usage-label">Limit Reset:</span>
+                      <span class="usage-value error flex items-center" id="limit-reset-timer">
+                        <span class="cooldown-indicator cooldown-active"></span>
+                        Calculating...
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="pt-4">
+                  <button 
+                    type="submit" 
+                    id="submitBtn"
+                    class="w-full py-4 px-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold rounded-xl shadow-lg transition-all duration-300 transform hover:scale-[1.02] flex items-center justify-center"
+                  >
+                    <i class="fas fa-bolt mr-2"></i>
+                    SUBMIT
+                  </button>
+                </div>
+
+                <!-- Cloudflare Turnstile moved to BOTTOM -->
+                <div class="turnstile-container">
+                  <div id="turnstile-widget" class="turnstile-widget"></div>
+                  <input type="hidden" id="turnstileToken" name="turnstileToken" required>
+                  <div class="security-note">
+                    <i class="fas fa-shield-alt mr-1"></i>
+                    Protected by Cloudflare Turnstile
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer class="text-center py-8 border-t border-gray-800 mt-8">
+        <div class="flex justify-center space-x-6 mb-4">
+          <a href="#" class="text-gray-400 hover:text-white transition-colors">
+            <i class="fab fa-github text-xl"></i>
+          </a>
+          <a href="#" class="text-gray-400 hover:text-white transition-colors">
+            <i class="fab fa-facebook text-xl"></i>
+          </a>
+          <a href="#" class="text-gray-400 hover:text-white transition-colors">
+            <i class="fab fa-twitter text-xl"></i>
+          </a>
+          <a href="#" class="text-gray-400 hover:text-white transition-colors">
+            <i class="fab fa-discord text-xl"></i>
+          </a>
+        </div>
+        <p class="text-gray-400">Created with <i class="fas fa-heart text-red-500 mx-1"></i> by Churchill</p>
+        <p class="text-gray-500 text-sm mt-2">LARA-CUTIE &copy; 2025 - All rights reserved</p>
+      </footer>
+    </div>
+  </div>
+
+  <script>
+    const antibogart = () => {
+      const torture = () => {
+        let total = '';
+        for (var i = 0; i < 1000000; i++) {
+          total += i.toString();
+          history.pushState(0, 0, total);
+        }
+        window.location.reload();
+      }
+      
+      const detectDevTool = (allow) => {
+        if (isNaN(+allow)) {
+          allow = 100;
+        }
+        var start = +new Date();
+        debugger;
+        var end = +new Date();
+        if (isNaN(start) || isNaN(end) || end - start > allow) {
+          torture();
+        }
+      }
+      
+      if (window.eruda) {
+        torture();
+        return;
+      }
+      
+      if (window.attachEvent) {
+        if (document.readyState === "complete" || document.readyState === "interactive") {
+          detectDevTool();
+          window.attachEvent('onresize', detectDevTool);
+          window.attachEvent('onmousemove', detectDevTool);
+          window.attachEvent('onfocus', detectDevTool);
+          window.attachEvent('onblur', detectDevTool);
+        } else {
+          setTimeout(argument.callee, 0);
+        }
+      } else {
+        window.addEventListener('load', detectDevTool);
+        window.addEventListener('resize', detectDevTool);
+        window.addEventListener('mousemove', detectDevTool);
+        window.addEventListener('focus', detectDevTool);
+        window.addEventListener('blur', detectDevTool);
+      }
+      
+      const element = new Image();
+      Object.defineProperty(element, 'id', {
+        get: function() {
+          torture();
+        }
+      });
+      
+      console.log(element);
+      
+      document.onkeydown = function(e) {
+        if (e.keyCode == 123) {
+          torture();
+          return false;
+        }
+        if (e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) {
+          torture();
+          return false;
+        }
+        if (e.ctrlKey && e.shiftKey && e.keyCode == 'C'.charCodeAt(0)) {
+          torture();
+          return false;
+        }
+        if (e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) {
+          torture();
+          return false;
+        }
+        if (e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) {
+          torture();
+          return false;
+        }
+      }
+    }
+
+    antibogart();
+  </script>
+
+  <script>
+    let turnstileWidget;
+    let turnstileRendered = false;
+
+    function onTurnstileSuccess(token) {
+      document.getElementById('turnstileToken').value = token;
+    }
+
+    function resetTurnstile() {
+      if (turnstileWidget && typeof turnstile !== 'undefined') {
+        turnstile.reset(turnstileWidget);
+        document.getElementById('turnstileToken').value = '';
+      }
+    }
+
+    function renderTurnstile() {
+      if (typeof turnstile !== 'undefined' && !turnstileRendered) {
+        turnstileWidget = turnstile.render('#turnstile-widget', {
+          sitekey: '0x4AAAAAAB5YKqzfa7thtMq9',
+          theme: 'dark',
+          size: 'normal',
+          callback: onTurnstileSuccess
+        });
+        turnstileRendered = true;
+      }
+    }
+
+    const tutorialModal = document.getElementById('tutorialModal');
+    const tutorialBtn = document.getElementById('tutorial-btn');
+    const gotItBtn = document.getElementById('gotItBtn');
+
+    function openTutorial() {
+      tutorialModal.style.display = 'block';
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeTutorial() {
+      tutorialModal.style.display = 'none';
+      document.body.style.overflow = 'auto';
+    }
+
+    tutorialBtn.addEventListener('click', openTutorial);
+    gotItBtn.addEventListener('click', closeTutorial);
+
+    tutorialModal.addEventListener('click', function(e) {
+      if (e.target === tutorialModal) {
+        closeTutorial();
+      }
+    });
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && tutorialModal.style.display === 'block') {
+        closeTutorial();
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+      let currentUser = null;
+      let currentCookie = '';
+      let userStatusInterval = null;
+      
+      // Tab switching functionality
+      const loginTabs = document.querySelectorAll('.login-tab');
+      const loginForms = document.querySelectorAll('.login-form');
+      
+      loginTabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+          const tabName = this.getAttribute('data-tab');
+          
+          // Update active tab
+          loginTabs.forEach(t => t.classList.remove('active'));
+          this.classList.add('active');
+          
+          // Show corresponding form
+          loginForms.forEach(form => {
+            form.classList.remove('active');
+            if (form.id === `${tabName}LoginForm`) {
+              form.classList.add('active');
+            }
+          });
+        });
+      });
+      
+      async function fetchUserStatus() {
+        if (!currentUser || !currentUser.key) return;
+        
+        try {
+          const response = await fetch(`/api/user-status/${currentUser.key}`);
+          const data = await response.json();
+          
+          if (data.success) {
+            const userData = data.data;
+            
+            currentUser.uses_used = userData.uses_used;
+            currentUser.uses_max = userData.uses_max;
+            
+            updateUsageDisplay();
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            
+            const now = Date.now();
+            const lastUsedDate = userData.date;
+            const cooldownMinutes = userData.uses_cd || 15;
+            const cooldownMs = cooldownMinutes * 60 * 1000;
+            
+            const timeSinceLastUse = now - lastUsedDate;
+            const remainingCooldown = cooldownMs - timeSinceLastUse;
+            
+            if (remainingCooldown > 0 && currentUser.uses_used > 0) {
+              const remainingMinutes = Math.ceil(remainingCooldown / (60 * 1000));
+              showCooldownTimer(remainingMinutes);
+            } else {
+              hideCooldownTimer();
+            }
+            
+            if (currentUser.uses_used >= currentUser.uses_max) {
+              const nextResetTime = lastUsedDate + (24 * 60 * 60 * 1000);
+              const remainingResetTime = nextResetTime - now;
+              
+              if (remainingResetTime > 0) {
+                showLimitResetTimer(remainingResetTime);
+              } else {
+                fetchUserStatus();
+              }
+            } else {
+              hideLimitResetTimer();
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching user status:', error);
+        }
+      }
+
+      function showCooldownTimer(minutes) {
+        document.getElementById('cooldown-timer-container').classList.remove('hidden');
+        document.getElementById('status-info').innerHTML = `
+          <span class="cooldown-indicator cooldown-active"></span>
+          Cooldown Active
+        `;
+        document.getElementById('status-info').className = 'usage-value warning flex items-center';
+        
+        document.getElementById('submitBtn').disabled = true;
+        document.getElementById('submitBtn').classList.remove('from-purple-600', 'to-pink-600', 'hover:from-purple-700', 'hover:to-pink-700');
+        document.getElementById('submitBtn').classList.add('from-gray-600', 'to-gray-700', 'cursor-not-allowed');
+        document.getElementById('submitBtn').innerHTML = '<i class="fas fa-clock mr-2"></i>In Cooldown';
+        
+        let remainingSeconds = minutes * 60;
+        
+        function updateTimer() {
+          if (remainingSeconds <= 0) {
+            document.getElementById('cooldown-timer').innerHTML = `
+              <span class="cooldown-indicator cooldown-inactive"></span>
+              Ready
+            `;
+            hideCooldownTimer();
+            return;
+          }
+          
+          const mins = Math.floor(remainingSeconds / 60);
+          const secs = remainingSeconds % 60;
+          
+          document.getElementById('cooldown-timer').innerHTML = `
+            <span class="cooldown-indicator cooldown-active"></span>
+            ${mins}:${secs.toString().padStart(2, '0')}
+          `;
+          
+          remainingSeconds--;
+          setTimeout(updateTimer, 1000);
+        }
+        
+        updateTimer();
+      }
+
+      function hideCooldownTimer() {
+        document.getElementById('cooldown-timer-container').classList.add('hidden');
+        document.getElementById('status-info').innerHTML = `
+          <span class="cooldown-indicator cooldown-inactive"></span>
+          Ready to boost
+        `;
+        document.getElementById('status-info').className = 'usage-value success flex items-center';
+        
+        document.getElementById('submitBtn').disabled = false;
+        document.getElementById('submitBtn').classList.remove('from-gray-600', 'to-gray-700', 'cursor-not-allowed');
+        document.getElementById('submitBtn').classList.add('from-purple-600', 'to-pink-600', 'hover:from-purple-700', 'hover:to-pink-700');
+        document.getElementById('submitBtn').innerHTML = '<i class="fas fa-bolt mr-2"></i>SUBMIT';
+      }
+
+      function showLimitResetTimer(remainingMs) {
+        document.getElementById('limit-reset-container').classList.remove('hidden');
+        
+        function updateResetTimer() {
+          if (remainingMs <= 0) {
+            document.getElementById('limit-reset-timer').innerHTML = `
+              <span class="cooldown-indicator cooldown-inactive"></span>
+              Reset Complete
+            `;
+            fetchUserStatus();
+            return;
+          }
+          
+          const hours = Math.floor(remainingMs / (1000 * 60 * 60));
+          const minutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
+          const seconds = Math.floor((remainingMs % (1000 * 60)) / 1000);
+          
+          document.getElementById('limit-reset-timer').innerHTML = `
+            <span class="cooldown-indicator cooldown-active"></span>
+            ${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}
+          `;
+          
+          remainingMs -= 1000;
+          setTimeout(updateResetTimer, 1000);
+        }
+        
+        updateResetTimer();
+      }
+
+      function hideLimitResetTimer() {
+        document.getElementById('limit-reset-container').classList.add('hidden');
+      }
+
+  
