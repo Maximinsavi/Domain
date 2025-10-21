@@ -146,7 +146,7 @@ form.addEventListener("submit", async (event) => {
   event.preventDefault();
 
   const uid = form.uid.value.trim();
-  const ask = form.ask.value.trim();
+  const q = form.q.value.trim();
   const imageUrl = imageUrlInput.value.trim();
   const imageFile = fileInput.files[0];
 
@@ -157,7 +157,7 @@ form.addEventListener("submit", async (event) => {
 
   const formData = new FormData();
   formData.set("uid", uid);
-  formData.set("ask", ask);
+  formData.set("q", q);
   formData.set("include_history", "true");
   if (imageUrl) {
     formData.set("image_url", imageUrl);
@@ -196,8 +196,8 @@ form.addEventListener("submit", async (event) => {
       conversationEl.appendChild(notice);
     }
 
-    form.ask.value = "";
-    if (ask.toLowerCase() === "clear") {
+    form.q.value = "";
+    if (q.toLowerCase() === "clear") {
       clearPreview();
       imageUrlInput.value = "";
     }
