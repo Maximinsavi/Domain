@@ -169,7 +169,7 @@ form.addEventListener("submit", async (event) => {
   setLoading(true);
 
   try {
-    const response = await fetch("//gemini-web-api.onrender.com/gemini", {
+    const response = await fetch("https://rest-apiv2-mnri.onrender.com/api/gptChat", {
       method: "POST",
       body: formData,
     });
