@@ -1,52 +1,53 @@
-<div id="maxchat" style="margin:10px auto; font-family:sans-serif; border:1px solid #ccc; border-radius:10px; overflow:hidden; display:flex; flex-direction:column; background:#fff;">    <style>        #maxchat .chat-box {            flex:1;            overflow-y:auto;            padding:10px;            background:#f0f2f5;            font-size:14px;        }        #maxchat .bubble {            max-width: 75%;            padding:10px 14px;            margin:8px 0;            border-radius:18px;            word-wrap: break-word;            line-height: 1.4;            display: inline-block;            clear: both;        }        #maxchat .left {            background:#e4e6eb;            float:right;            text-align:left;            border-bottom-left-radius: 4px;        }        #maxchat .right {            background:#0084ff;            color:white;            float:left;            text-align:left;            border-bottom-right-radius: 4px;        }        #maxchat form {            display:flex;            border-top:1px solid #ccc;            background:#fff;            padding:10px;            position: sticky;            bottom: 0;            z-index: 10;            box-shadow: 0 -2px 5px rgb(0 0 0 / 0.1);        }        #maxchat input[type="text"] {            flex:1;            padding:10px 15px;            font-size:16px;            border:1px solid #ccc;            border-radius:25px;            outline:none;            min-width: 0;        }        #maxchat button {            margin-left:10px;            padding:0 20px;            background:#4e54c8;            border:none;            border-radius:25px;            color:#fff;            font-weight:bold;            cursor:pointer;            white-space: nowrap;        }    </style>    <div class="chat-box" id="chat-box"></div>    <form id="chat-form" autocomplete="off">        <input type="text" id="msg-input" placeholder="Write here... " required />        <button type="submit">Send</button>    </form>    </div><script>
-    function escapeHtml(text) {
-        return text
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#039;");
-    }
+<div id="maxchat" style="margin:10px auto; font-family:sans-serif; border:1px solid #ccc; border-radius:10px; overflow:hidden; display:flex; flex-direction:column; background:#fff;">    <style>        #maxchat .chat-box {            flex:1;            overflow-y:auto;            padding:10px;            background:#f0f2f5;            font-size:14px;        }        #maxchat .bubble {            max-width: 75%;            padding:10px 14px;            margin:8px 0;            border-radius:18px;            word-wrap: break-word;            line-height: 1.4;            display: inline-block;            clear: both;        }        #maxchat .left {            background:#e4e6eb;            float:right;            text-align:left;            border-bottom-left-radius: 4px;        }        #maxchat .right {            background:#0084ff;            color:white;            float:left;            text-align:left;            border-bottom-right-radius: 4px;        }        #maxchat form {            display:flex;            border-top:1px solid #ccc;            background:#fff;            padding:10px;            position: sticky;            bottom: 0;            z-index: 10;            box-shadow: 0 -2px 5px rgb(0 0 0 / 0.1);        }        #maxchat input[type="text"] {            flex:1;            padding:10px 15px;            font-size:16px;            border:1px solid #ccc;            border-radius:25px;            outline:none;            min-width: 0;        }        #maxchat button {            margin-left:10px;            padding:0 20px;            background:#4e54c8;            border:none;            border-radius:25px;            color:#fff;            font-weight:bold;            cursor:pointer;            white-space: nowrap;        }    </style>    <div class="chat-box" id="chat-box"></div>    <form id="chat-form" autocomplete="off">        <input type="text" id="msg-input" placeholder="Write here... " required />        <button type="submit">Send</button>    </form>    </div> 
 
-    var chatBox = document.getElementById("chat-box");
-    var form = document.getElementById("chat-form");
-    var input = document.getElementById("msg-input");
+    <script>
+function escapeHtml(text) {
+    return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
 
-    form.addEventListener("submit", function(e) {
-        e.preventDefault();
-        var text = input.value.trim();
-        if (!text) return;
+var chatBox = document.getElementById("chat-box");
+var form = document.getElementById("chat-form");
+var input = document.getElementById("msg-input");
 
-        chatBox.innerHTML += '<div id="maxid" class="bubble left"><b>:my_name:</b><br>' + escapeHtml(text) + '</div>';
-        input.value = "";
+form.addEventListener("submit", function(e) {
+    e.preventDefault();
+    var text = input.value.trim();
+    if (!text) return;
 
-        var xhr = new XMLHttpRequest();
-        var url = 'https://rest-apiv2-mnri.onrender.com/api/ai?id=:my_name:&q=' + encodeURIComponent(text);
-        xhr.open("GET", url);
+    chatBox.innerHTML += '<div id="maxid" class="bubble left"><b>:my_name:</b><br>' + escapeHtml(text) + '</div>';
+    input.value = "";
 
-        xhr.onload = function() {
-            if (xhr.status === 200) {
-                try {
-                    var data = JSON.parse(xhr.responseText);
-                    var reply = data.response || "No response.";
-                    chatBox.innerHTML += '<div class="bubble right"><b>MaxChat</b><br>' + escapeHtml(reply) + '</div>';
-                    chatBox.scrollTop = chatBox.scrollHeight;
-                } catch(e) {
-                    chatBox.innerHTML += '<div class="bubble right">JSON read error.</div>';
-                }
-            } else {
-                chatBox.innerHTML += '<div class="bubble right">API error: ' + xhr.status + '</div>';
+    var xhr = new XMLHttpRequest();
+    // On appelle notre proxy sur notre serveur
+    var url = '/proxy-api?q=' + encodeURIComponent(text) + '&name=:my_name:';
+    xhr.open("GET", url);
+
+    xhr.onload = function() {
+        if (xhr.status === 200) {
+            try {
+                var data = JSON.parse(xhr.responseText);
+                var reply = data.response || "Pas de réponse.";
+                chatBox.innerHTML += '<div class="bubble right"><b>MaxChat</b><br>' + escapeHtml(reply) + '</div>';
+                chatBox.scrollTop = chatBox.scrollHeight;
+            } catch(e) {
+                chatBox.innerHTML += '<div class="bubble right">Erreur lecture JSON.</div>';
             }
-            chatBox.scrollTop = chatBox.scrollHeight;
-        };
+        } else {
+            chatBox.innerHTML += '<div class="bubble right">Erreur API: ' + xhr.status + '</div>';
+        }
+        chatBox.scrollTop = chatBox.scrollHeight;
+    };
 
-        xhr.onerror = function() {
-            var svgGear = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:4px;"><path d="M19.43 12.98c.04-.32.07-.66.07-1s-.03-.68-.07-1l2.11-1.65a.5.5 0 00.12-.66l-2-3.46a.5.5 0 00-.61-.22l-2.49 1a7.028 7.028 0 00-1.71-.99l-.38-2.65A.5.5 0 0014 2h-4a.5.5 0 00-.49.42l-.38 2.65a7.028 7.028 0 00-1.71.99l-2.49-1a.5.5 0 00-.61.22l-2 3.46a.5.5 0 00.12.66l2.11 1.65c-.04.32-.07.66-.07 1s.03.68.07 1l-2.11 1.65a.5.5 0 00-.12.66l2 3.46a.5.5 0 00.61.22l2.49-1c.5.4 1.08.73 1.71.99l.38 2.65A.5.5 0 0010 22h4a.5.5 0 00.49-.42l.38-2.65c.63-.26 1.21-.59 1.71-.99l2.49 1a.5.5 0 00.61-.22l2-3.46a.5.5 0 00-.12-.66l-2.11-1.65zM12 15.5a3.5 3.5 0 110-7 3.5 3.5 0 010 7z"/></svg>';
-            var svgCone = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:4px;"><path d="M21 20H3l9-17 9 17zM12 6.9L6.8 17h10.4L12 6.9z"/></svg>';
-            chatBox.innerHTML += '<div class="bubble right"><b>' + svgGear + 'MaxChat</b><br>' + svgCone + 'Under maintenance — please try again later.</div>';
-            chatBox.scrollTop = chatBox.scrollHeight;
-        };
+    xhr.onerror = function() {
+        chatBox.innerHTML += '<div class="bubble right"><b>MaxChat</b><br>Erreur réseau — essayez plus tard.</div>';
+        chatBox.scrollTop = chatBox.scrollHeight;
+    };
 
-        xhr.send();
-    });
+    xhr.send();
+});
 </script>
