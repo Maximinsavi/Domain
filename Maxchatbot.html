@@ -31,7 +31,7 @@ form.addEventListener("submit", function(e) {
         if (xhr.status === 200) {
             try {
                 var data = JSON.parse(xhr.responseText);
-                var reply = data.response || "Pas de réponse.";
+                var reply = data.reply || "Pas de réponse.";
                 chatBox.innerHTML += '<div class="bubble right"><b>MaxChat</b><br>' + escapeHtml(reply) + '</div>';
                 chatBox.scrollTop = chatBox.scrollHeight;
             } catch(e) {
