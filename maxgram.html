@@ -5,71 +5,92 @@
 <title>Robot MaxGram Auto</title>
 <style>
 body{font-family:Arial,sans-serif;max-width:900px;margin:20px auto;padding:10px;}
-iframe{width:100%;height:450px;border:1px solid #ccc;margin-top:20px;}
 #status{color:green;font-weight:bold;margin-bottom:10px;}
+#errors{color:red;font-weight:bold;margin-bottom:10px;}
+button{padding:8px 12px;margin-top:5px;}
 </style>
 </head>
 <body>
 
-<h1>Robot MaxGram</h1>
+<h1>Robot MaxGram Auto</h1>
 <div id="status">Initialisation...</div>
-
-<iframe id="robot-frame" src="about:blank"></iframe>
+<div id="errors"></div>
 
 <script>
+function log(msg){ document.getElementById("status").textContent = msg; console.log(msg); }
+function error(msg){ document.getElementById("errors").textContent = msg; console.error(msg); }
+function sleep(ms){ return new Promise(res => setTimeout(res, ms)); }
+
+// === LISTE DES POSTS ===
 const posts = [
-  {text:"Post automatique n°1 🚀", image:""},
-  {text:"Deuxième post automatique avec image 🖼️", image:"https://via.placeholder.com/300"},
-  {text:"Troisième post automatique 🎯", image:""}
+  {text:"Post auto 1 🚀", image:""},
+  {text:"Post auto 2 🖼️", image:"https://via.placeholder.com/300"},
+  {text:"Post auto 3 🎯", image:""}
 ];
-const delay = 4000; // 4 secondes entre chaque post
+const delay = 3000;
 
-function log(msg){
-  document.getElementById("status").textContent = msg;
-  const iframeDoc = document.getElementById("robot-frame").contentDocument;
-  if(iframeDoc){
-    const p = iframeDoc.createElement("p");
-    p.textContent = msg;
-    iframeDoc.body.appendChild(p);
-    iframeDoc.body.scrollTop = iframeDoc.body.scrollHeight;
-  }
-  console.log(msg);
+// === FONCTION PRINCIPALE ===
+async function runRobot() {
+  const directLink = "https://maxgram.wapaxo.com/?p=64932261&u=Thibaut";
+  log("Ouverture du lien MaxGram...");
+  
+  // 1️⃣ Aller sur le lien direct
+  window.location.href = directLink;
+
+  // ⚠️ Le script sera perdu si navigue vers un autre domaine
+  // Donc pour que ça fonctionne, ce script doit être injecté ou exécuté sur maxgram.wapaxo.com
+  
+  // --- Exemple d’automatisation à mettre sur maxgram.wapaxo.com ---
+  /*
+  window.addEventListener('load', async () => {
+    // Vérifier si l’utilisateur est connecté / profil valide
+    const profileExists = document.querySelector(".user-header, #profile-identifier");
+    if(!profileExists){
+      error("❌ Profil introuvable ou non connecté !");
+      return;
+    }
+
+    log("Utilisateur connecté, redirection vers la page d'accueil...");
+    // Rediriger vers la page d’accueil
+    window.location.href = "https://maxgram.wapaxo.com/index.html";
+    await sleep(2000);
+
+    // Cliquer sur le bouton “Créer un post”
+    const createBtn = document.querySelector('a[href="/page-creat-post.html"]');
+    if(createBtn){
+      log("Création d’un nouveau post...");
+      createBtn.click();
+    } else {
+      error("❌ Bouton pour créer un post introuvable !");
+      return;
+    }
+
+    // Une fois sur la page de création, remplir et publier les posts
+    await sleep(2000);
+    const textarea = document.querySelector('textarea[name="text"]');
+    const imgInput = document.querySelector('input[name="var-img"]');
+    const postBtn = document.querySelector('button[name="blog_submit"]');
+    if(!textarea || !postBtn){
+      error("❌ Formulaire introuvable !");
+      return;
+    }
+
+    for(let i=0;i<posts.length;i++){
+      const p = posts[i];
+      log(`Publication ${i+1}/${posts.length}: ${p.text}`);
+      textarea.value = p.text;
+      if(imgInput) imgInput.value = p.image || "";
+      postBtn.click();
+      await sleep(delay);
+    }
+
+    log("✅ Tous les posts ont été publiés !");
+  });
+  */
 }
 
-function sleep(ms){ return new Promise(res=>setTimeout(res,ms)); }
-
-async function startRobot(){
-  log("Ouverture du compte MaxGram...");
-  const frame = document.getElementById("robot-frame");
-  frame.src = "https://maxgram.wapaxo.com/?p=64932261&u=Thibaut";
-
-  await sleep(3000); // Attente que la page d'accueil charge
-  log("Connexion détectée, ouverture de la page de création de post...");
-
-  frame.src = "https://maxgram.wapaxo.com/page-bot-post.html";
-  await sleep(4000); // Attente chargement page création
-
-  for(let i=0;i<posts.length;i++){
-    const p = posts[i];
-    log(`Publication ${i+1}/${posts.length}: ${p.text}`);
-
-    // Envoi au contenu interne de l'iframe
-    frame.contentWindow.postMessage({type:"createPost", data:p}, "*");
-    await sleep(delay);
-  }
-
-  log("✅ Tous les posts ont été envoyés !");
-}
-
-// --- Auto-run au chargement de la page ---
-window.addEventListener('load', startRobot);
-
-// Optionnel : recevoir les logs depuis l'iframe
-window.addEventListener("message", (e)=>{
-  if(e.data && e.data.type==="log"){
-    log(e.data.msg);
-  }
-});
+// === LANCEMENT AUTOMATIQUE ===
+window.addEventListener('load', runRobot);
 </script>
 
 </body>
