@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Robot MaxGram Auto</title>
+</head>
+<body>
+
+<h2>Robot de publication automatique</h2>
+<button id="startBtn">Commencer le robot</button>
+<div id="log" style="margin-top:20px; font-family:monospace;"></div>
+
+<script>
+const log = (msg) => {
+    document.getElementById('log').innerHTML += msg + '<br>';
+};
+
+document.getElementById('startBtn').addEventListener('click', () => {
+    log("Étape 1 : remplir le texte...");
+    const textarea = document.querySelector('textarea[name="text"]');
+    if(!textarea) return log("Textarea non trouvée !");
+    textarea.value = "Hello from robot!"; // texte à publier
+    log("Texte rempli : " + textarea.value);
+
+    log("Étape 2 : ajouter l'image...");
+    const imgInput = document.querySelector('input[name="var-img"]');
+    if(imgInput) {
+        imgInput.value = "https://exemple.com/photo.jpg";
+        log("Image ajoutée : " + imgInput.value);
+    } else log("Champ image non trouvé");
+
+    log("Étape 3 : définir la couleur...");
+    const colorInput = document.querySelector('input[name="var-color"]');
+    if(colorInput) {
+        colorInput.value = "#ffcc00"; // couleur de fond
+        log("Couleur définie : " + colorInput.value);
+    } else log("Champ couleur non trouvé");
+
+    log("Étape 4 : cliquer sur Publier...");
+    const postBtn = document.querySelector('button[name="blog_submit"]');
+    if(postBtn) {
+        postBtn.click();
+        log("Bouton Post cliqué !");
+    } else log("Bouton Post non trouvé");
+});
+</script>
+
+</body>
+</html>
