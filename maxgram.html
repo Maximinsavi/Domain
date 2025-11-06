@@ -1,167 +1,242 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
 <head>
 <meta charset="utf-8" />
-<title>Robot MaxGram - auto login iframe (u=maximin)</title>
+<title>Robot Multi‑MaxGram — sans ?u=&p=</title>
 <style>
-  body{font-family:Arial,Helvetica,sans-serif;margin:18px;max-width:1000px;}
-  #log{height:200px;border:1px solid #ccc;padding:8px;overflow:auto;background:#fafafa;}
+  body{font-family:Arial,Helvetica,sans-serif;margin:16px;max-width:1100px;}
+  textarea,input,button{font-size:14px;}
+  textarea#profiles{width:100%;height:140px;}
+  #log{height:200px;border:1px solid #ccc;padding:8px;overflow:auto;background:#fafafa;margin-top:8px;}
   iframe{width:100%;height:520px;border:1px solid #888;margin-top:12px;}
-  .ok{color:#0a8;}
+  .row{display:flex;gap:8px;margin-top:8px;}
+  .small{width:160px;}
+  .ok{color:#0a8}
   .err{color:#c33}
-  pre{background:#eee;padding:8px;overflow:auto;}
-  button{padding:8px 12px;margin-top:8px;cursor:pointer}
+  pre{background:#eee;padding:8px;white-space:pre-wrap;}
 </style>
 </head>
 <body>
+  <h2>Robot Multi‑MaxGram — Login iframe (sans query params)</h2>
 
-<h2>Robot MaxGram — auto login dans iframe (u=maximin)</h2>
-<div id="log"></div>
+  <p>
+    Entrez la liste de profils (un par ligne), format : <code>username|p</code><br>
+    Exemple : <code>Thibaut|64932261</code>
+  </p>
 
-<!-- Formulaire de login qui target l'iframe -->
-<form id="loginForm" action="//maxgram.wapaxo.com/site_login.html" method="post" target="robotFrame" style="display:none;">
-  <input name="user_name_" type="hidden" value="maximin">
-  <!-- REMPLACE TON_MOT_DE_PASSE_ICI PAR TON MOT DE PASSE -->
-  <input name="password_" id="pwdField" type="hidden" value="TON_MOT_DE_PASSE_ICI">
-  <input type="submit" id="loginSubmit" value="login">
-</form>
+  <textarea id="profiles" placeholder="Thibaut|64932261
+maximin|64932261"></textarea>
 
-<!-- iframe qui affichera MaxGram -->
-<iframe id="robotFrame" name="robotFrame" src="about:blank"></iframe>
+  <div style="margin-top:8px;">
+    <label>Mot de passe utilisé pour tous les comptes (remplace ici) :</label><br>
+    <input id="sharedPwd" type="password" placeholder="motdepasse partagé" style="width:320px" />
+    <button id="savePwd">Enregistrer</button>
+  </div>
 
-<!-- Bouton pour afficher le script à coller dans la console de l'iframe -->
-<button id="showScriptBtn">Afficher script à coller dans la console de l'iframe</button>
+  <div class="row">
+    <button id="startAll">Lancer tout (login + open create pour chaque profil)</button>
+    <button id="stopAll" disabled>Arrêter</button>
+    <button id="generateAllScripts">Générer/Préparer tous les scripts (copiable)</button>
+  </div>
 
-<details style="margin-top:10px;">
-  <summary>Script (console) pour exécuter la publication AUTOMATIQUE dans l'iframe</summary>
-  <pre id="consoleScript" style="white-space:pre-wrap"></pre>
-</details>
+  <div id="log"></div>
+
+  <!-- hidden form target iframe -->
+  <form id="loginForm" action="//maxgram.wapaxo.com/site_login.html" method="post" target="robotFrame" style="display:none;">
+    <input name="user_name_" id="f_user" type="hidden" value="Thibaut">
+    <input name="password_" id="f_pass" type="hidden" value="64932261">
+    <input type="submit" name="login_user" id="f_submit" value="login">
+  </form>
+
+  <h3>Iframe MaxGram (visual)</h3>
+  <iframe id="robotFrame" name="robotFrame" src="about:blank"></iframe>
+
+  <details style="margin-top:12px;">
+    <summary>Script d'exemple (à coller dans la console de l'iframe pour envoyer les posts)</summary>
+    <pre id="sampleScript"></pre>
+  </details>
 
 <script>
-/* ====== CONFIG ====== */
-const PROFILE_URL = 'https://maxgram.wapaxo.com/?u=maximin&p=64932261'; // page d'arrivée après login
-const CREATE_PAGE = 'https://maxgram.wapaxo.com/page-bot-post.html';    // page de création
-const WAIT_AFTER_LOGIN_MS = 3000;   // attente après soumission du login
-const WAIT_AFTER_PROFILE_MS = 2500; // attente après chargement profil
-/* ===================== */
+/* ===== CONFIG ===== */
+const BASE_SITE = 'https://maxgram.wapaxo.com';               // <--- sans ?u=...&p=...
+const CREATE_PAGE = BASE_SITE + '/page-bot-post.html';
+const WAIT_AFTER_POST_LOGIN_MS = 3000; // attente après login POST
+const WAIT_AFTER_NAV_MS = 2500; // attente après navigation vers profile/create
+const POSTS = [
+  { text: "Post auto 1 🚀", image: "" },
+  { text: "Post auto 2 🖼️", image: "https://via.placeholder.com/300" }
+];
+/* ================== */
 
+const profilesEl = document.getElementById('profiles');
 const logEl = document.getElementById('log');
-function log(msg, cls){
+const frame = document.getElementById('robotFrame');
+const fUser = document.getElementById('f_user');
+const fPass = document.getElementById('f_pass');
+const fSubmit = document.getElementById('f_submit');
+const loginForm = document.getElementById('loginForm');
+
+let stopRequested = false;
+let storedPwd = '';
+
+function appendLog(txt, cls){
   const d = document.createElement('div');
   if(cls) d.className = cls;
-  d.textContent = (new Date()).toLocaleTimeString() + ' — ' + msg;
+  d.textContent = (new Date()).toLocaleTimeString() + ' — ' + txt;
   logEl.appendChild(d);
   logEl.scrollTop = logEl.scrollHeight;
-  console.log(msg);
+  console.log(txt);
 }
 
-// 1) soumettre automatiquement le formulaire dans l'iframe
-function autoLoginInIframe(){
-  log('Soumission automatique du formulaire de login vers MaxGram (dans l\'iframe)…');
-  // 1a : d'abord naviguer l'iframe sur l'URL de login via POST en soumettant le form ciblant l'iframe
-  const f = document.getElementById('loginForm');
-  // Sécurité : s'assurer que l'utilisateur a remplacé le mot de passe
-  const pwd = document.getElementById('pwdField').value;
-  if(!pwd || pwd === '64932261'){
-    log('⚠️ Remplace "TON_MOT_DE_PASSE_ICI" par ton mot de passe dans le champ hidden avant de lancer.', 'err');
-    return;
-  }
-  // Soumettre dans l'iframe
-  f.submit();
-
-  // Après un délai, forcer l'iframe à aller vers le profil direct (par précaution)
-  setTimeout(()=> {
-    try{
-      const frame = document.getElementById('robotFrame');
-      frame.src = PROFILE_URL;
-      log('Chargement du profil : ' + PROFILE_URL);
-    }catch(e){
-      log('Erreur en naviguant l\'iframe : '+e, 'err');
-    }
-  }, WAIT_AFTER_LOGIN_MS);
-}
-
-// 2) après que l'iframe ait chargé le profil, on tentera d'aller sur la page de création
-const frame = document.getElementById('robotFrame');
-frame.addEventListener('load', () => {
-  const u = (frame.contentWindow && frame.contentWindow.location && String(frame.contentWindow.location.href)) || frame.src;
-  log('Iframe chargée — URL actuelle: ' + u);
-  // Si l'URL contient index.html (ou index?), considérer comme "réussi" et naviguer vers la page de création
-  try{
-    const url = u.toLowerCase();
-    if(url.includes('/index') || url.endsWith('/')){
-      log('Détection : page d\'accueil/profile détectée. Navigation vers la page de création...', 'ok');
-      setTimeout(()=> {
-        frame.src = CREATE_PAGE;
-        log('Ouverture de la page de création : ' + CREATE_PAGE);
-      }, WAIT_AFTER_PROFILE_MS);
-    } else {
-      // si l'iframe est encore sur la page de login, on laisse le flux suivre (ou on retry)
-      log('L\'iframe n\'a pas encore redirigé vers l\'index — attendre ou vérifier manuellement.');
-    }
-  }catch(e){
-    // Note : l'accès à frame.contentWindow.location peut lever si cross-origin, mais .src est suffisant.
-    log('Note : impossibilité de lire exactement l\'URL de l\'iframe (cross-origin). Je m\'appuie sur frame.src.', 'err');
+document.getElementById('savePwd').addEventListener('click', () => {
+  storedPwd = document.getElementById('sharedPwd').value || '';
+  if(!storedPwd) {
+    appendLog('⚠️ Mot de passe vide — entre le mot de passe partagé.', 'err');
+  } else {
+    appendLog('Mot de passe enregistré (en mémoire du navigateur).', 'ok');
   }
 });
 
-// 3) script prêt à coller dans la console de l'iframe pour créer et soumettre les posts
-const posts = [
-  { text: "Post automatique n°1 🚀", image: "" },
-  { text: "Post automatique n°2 🖼️", image: "https://via.placeholder.com/300" },
-  { text: "Post automatique n°3 🎯", image: "" }
-];
+// parse profiles textarea into array of {u,p}
+function parseProfiles(){
+  const lines = profilesEl.value.split('\n').map(l => l.trim()).filter(Boolean);
+  const arr = [];
+  for(const ln of lines){
+    const parts = ln.split('|').map(s=>s.trim());
+    if(parts.length < 2){
+      appendLog('Ligne ignorée (format invalide): ' + ln, 'err');
+      continue;
+    }
+    arr.push({ u: parts[0], p: parts[1] });
+  }
+  return arr;
+}
 
-const consoleScript = `(function(){
-  const posts = ${JSON.stringify(posts, null, 2)};
-  const delay = 3000;
+// generate per-profile console-script to paste in iframe
+function makeConsoleScriptForProfile(profile, posts=POSTS, delay=3000){
+  const postsStr = JSON.stringify(posts, null, 2);
+  // script uses base site content (no reliance on ?u=...&p=...), works on creation page
+  return `(function(){
+  const posts = ${postsStr};
+  const delay = ${delay};
   async function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
   async function run(){
-    console.log('Script iframe : démarrage des publications...');
-    // adapter les selecteurs selon le HTML réel
+    console.log('▶ Script Auto-Post — démarrage');
     const textarea = document.querySelector('textarea[name="text"]') || document.querySelector('textarea');
     const imgInput = document.querySelector('input[name="var-img"]') || document.querySelector('input[type="text"]');
     const submitBtn = document.querySelector('button[name="blog_submit"]') || document.querySelector('button[type="submit"]') || document.querySelector('input[type="submit"]');
-
     if(!textarea || !submitBtn){
-      console.error('Formulaire introuvable — vérifie les selecteurs dans le script.');
+      console.error('❌ Formulaire introuvable sur la page de création. Vérifie les sélecteurs.');
       return;
     }
-
     for(let i=0;i<posts.length;i++){
       const p = posts[i];
-      console.log('Publication', i+1, '/', posts.length, ':', p.text);
+      console.log('→ Publication ' + (i+1) + '/' + posts.length + ':', p.text);
       textarea.value = p.text;
-      if(imgInput) imgInput.value = p.image || '';
-      // déclencher les events d'entrée au cas où le site écoute input/change
-      textarea.dispatchEvent(new Event('input', {bubbles:true}));
-      if(imgInput) imgInput.dispatchEvent(new Event('input', {bubbles:true}));
-      // soumettre
+      textarea.dispatchEvent(new Event('input',{bubbles:true}));
+      if(imgInput){
+        imgInput.value = p.image || '';
+        imgInput.dispatchEvent(new Event('input',{bubbles:true}));
+      }
       submitBtn.click();
-      console.log('Click submit envoyé pour post', i+1);
+      console.log('Click submit envoyé');
       await sleep(delay);
     }
-    console.log('✅ Tous les posts envoyés (script iframe).');
+    console.log('✅ Tous les posts envoyés pour ${profile.u}');
   }
   run();
 })();`;
+}
 
-document.getElementById('consoleScript').textContent = consoleScript;
+// show sample script area
+function showSampleScript(text){
+  document.getElementById('sampleScript').textContent = text;
+}
 
-// bouton pour afficher le script dans la console parent (copie)
-document.getElementById('showScriptBtn').addEventListener('click', () => {
-  log('Script de publication prêt — copie-le depuis le panneau ci‑dessous et colle-le dans la console de l\'iframe (F12 → Console).', 'ok');
-  // mettre le script dans la console du parent aussi (pratique pour copy/paste)
-  console.log(consoleScript);
+// START processing all profiles sequentially: login -> open base site -> open create page
+document.getElementById('startAll').addEventListener('click', async ()=>{
+  stopRequested = false;
+  const list = parseProfiles();
+  if(list.length === 0){
+    appendLog('Aucun profil trouvé. Ajoute des lignes "user|p" dans la zone.', 'err');
+    return;
+  }
+  if(!storedPwd){
+    appendLog('⚠️ Mot de passe partagé non défini. Clique "Enregistrer" après saisie.', 'err');
+    return;
+  }
+  document.getElementById('startAll').disabled = true;
+  document.getElementById('stopAll').disabled = false;
+  appendLog('Démarrage du traitement pour ' + list.length + ' profil(s) ...');
+
+  for(let i=0;i<list.length && !stopRequested;i++){
+    const prof = list[i];
+    appendLog(`--- Traitement (${i+1}/${list.length}): ${prof.u} | p=${prof.p} ---`);
+    // set login form values (use storedPwd)
+    fUser.value = prof.u;
+    fPass.value = storedPwd;
+
+    // submit form to iframe (POST to site_login.html in iframe)
+    try{
+      loginForm.submit();
+      appendLog('Formulaire de login soumis dans l\'iframe pour ' + prof.u);
+    } catch(e){
+      appendLog('Erreur lors de la soumission du formulaire: ' + e, 'err');
+      continue;
+    }
+
+    // after small wait, navigate iframe to the base site (no ?u=...&p=)
+    await new Promise(r => setTimeout(r, WAIT_AFTER_POST_LOGIN_MS));
+    const baseUrl = BASE_SITE; // no query params
+    frame.src = baseUrl;
+    appendLog('Iframe navigue vers ' + baseUrl);
+
+    // wait for base site load (we cannot read DOM cross-origin reliably, so wait fixed ms)
+    await new Promise(r => setTimeout(r, WAIT_AFTER_NAV_MS));
+
+    // navigate to create page
+    appendLog('Ouverture de la page de création pour ' + prof.u);
+    frame.src = CREATE_PAGE;
+    await new Promise(r => setTimeout(r, WAIT_AFTER_NAV_MS));
+
+    // generate console script for this profile and display it for copy
+    const cs = makeConsoleScriptForProfile(prof, POSTS, 3000);
+    showSampleScript(cs);
+    appendLog('Script pour poster généré pour ' + prof.u + '. Copie-le et colle-le dans la console de l\'iframe pour lancer les publications.');
+    appendLog('--- Fin du profil ' + prof.u + ' ---');
+
+    // small pause before next profile
+    await new Promise(r => setTimeout(r, 1200));
+  }
+
+  appendLog('Traitement terminé.');
+  document.getElementById('startAll').disabled = false;
+  document.getElementById('stopAll').disabled = true;
 });
 
-// 4) Lancer automatiquement la tentative de login au chargement de la page parente
-window.addEventListener('load', ()=> {
-  // lancer auto-login
-  setTimeout(autoLoginInIframe, 500);
-  log('Tentative de login automatique programmée (500 ms). Remplace le mot de passe si besoin avant rechargement.');
+// stop
+document.getElementById('stopAll').addEventListener('click', ()=>{
+  stopRequested = true;
+  appendLog('Arrêt demandé par l\'utilisateur.');
+  document.getElementById('startAll').disabled = false;
+  document.getElementById('stopAll').disabled = true;
 });
+
+// generate scripts for all profiles at once into sampleScript
+document.getElementById('generateAllScripts').addEventListener('click', ()=>{
+  const list = parseProfiles();
+  if(list.length === 0){ appendLog('Aucun profil trouvé pour générer', 'err'); return; }
+  const all = list.map(p => `/* Script pour ${p.u} */\n${makeConsoleScriptForProfile(p)}\n\n`).join('\n');
+  showSampleScript(all);
+  appendLog('Scripts générés pour ' + list.length + ' profil(s). Copie celui que tu veux et colle dans la console de l\'iframe.');
+});
+
+// initialize sample script area with first profile example
+(function init(){
+  const first = parseProfiles()[0] || {u:'example', p:'64932261'};
+  showSampleScript(makeConsoleScriptForProfile(first));
+  appendLog('Prêt — renseigne les profils, le mot de passe partagé, puis clique "Lancer tout".');
+})();
 </script>
-
 </body>
 </html>
