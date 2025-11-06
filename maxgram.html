@@ -1,75 +1,127 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>MaxGram Robotisé</title>
+<style>
+body{font-family:Arial,sans-serif;max-width:900px;margin:20px auto;padding:10px;}
+textarea,input,button{padding:8px;font-size:14px;margin-bottom:5px;width:100%;}
+button{cursor:pointer;}
+#status{color:green;margin-bottom:10px;}
+iframe#results-frame{width:100%;height:300px;border:1px solid #ccc;margin-top:20px;}
+</style>
+</head>
+<body>
+
+<h1>MaxGram Robot</h1>
+<div id="status">Initialisation...</div>
+
+<!-- SECTION LOGIN -->
+<div id="login-section">
+  <h2>Connexion</h2>
+  <input type="text" id="login-user" placeholder="Nom utilisateur">
+  <input type="password" id="login-pass" placeholder="Mot de passe">
+  <button id="login-btn">Se connecter</button>
+</div>
+
+<!-- SECTION CREATION DE POST -->
+<div id="post-section" style="display:none;">
+  <h2>Création de post</h2>
+  <form id="post-form">
+    <textarea name="text" id="post-text" placeholder="Texte du post"></textarea>
+    <input type="text" name="var-img" id="post-img" placeholder="URL image (optionnel)">
+    <input type="color" name="var-color" id="post-color" value="#ffcc00">
+    <input type="hidden" name="var-edit" value="edit">
+    <input type="hidden" name="blog_title" value="post by MaxChat">
+    <button type="button" id="post-btn">Publier</button>
+  </form>
+</div>
+
+<!-- IFRAME POUR AFFICHER LES RESULTATS EN TEMPS REEL -->
+<h2>Résultats en temps réel</h2>
+<iframe id="results-frame"></iframe>
+
 <script>
-(function(){
-    console.log("Robot MaxGram complet démarré...");
+// === CONFIGURATION ===
+const posts = [
+  { text:"Post automatique 1", image:"" },
+  { text:"Post automatique 2", image:"https://via.placeholder.com/400" },
+  { text:"Post automatique 3", image:"" }
+];
+const postDelayMs = 2500;  // délai entre chaque post
+const loginDelayMs = 1500; // délai pour simuler la connexion
 
-    // --- CONFIGURATION ---
-    const loginUrl = "/index?p=64932261&u=MaxChat"; // page qui sert à login automatique
-    const createPostUrl = "/page-creat-post.html";  // page de création
-    const posts = [
-        { text: "Premier post automatique", image: "" },
-        { text: "Deuxième post", image: "https://via.placeholder.com/400" },
-        { text: "Troisième post", image: "" }
-    ];
-    const loginDelayMs = 2000;  // délai pour que la session se crée
-    const postDelayMs = 2500;   // délai entre chaque publication
+// === UTILITAIRES ===
+function log(msg){
+  document.getElementById("status").innerText = msg;
+  const iframeDoc = document.getElementById("results-frame").contentDocument;
+  if(iframeDoc){
+    const p = iframeDoc.createElement("p");
+    p.textContent = msg;
+    iframeDoc.body.appendChild(p);
+    iframeDoc.body.scrollTop = iframeDoc.body.scrollHeight;
+  }
+  console.log(msg);
+}
+function sleep(ms){ return new Promise(res=>setTimeout(res,ms)); }
 
-    // --- UTILITAIRES ---
-    function sleep(ms){ return new Promise(res => setTimeout(res, ms)); }
-    function log(msg){ console.log("[Robot] "+msg); }
+// === CONNEXION AUTOMATIQUE ===
+async function doLogin(user, pass){
+  log("Connexion en cours...");
+  // Ici tu peux simuler la connexion réelle, ex: remplir hidden fields et soumettre formulaire
+  await sleep(loginDelayMs);
+  log(`Connecté en tant que ${user}`);
+  document.getElementById("login-section").style.display = "none";
+  document.getElementById("post-section").style.display = "block";
+}
 
-    async function runRobot(){
-        // 1️⃣ Aller sur login URL pour créer session
-        log("Ouverture de l'URL de connexion automatique...");
-        window.location.href = loginUrl;
-        await sleep(loginDelayMs);
+// === PUBLICATION AUTOMATIQUE ===
+async function runPosts(){
+  for(let i=0;i<posts.length;i++){
+    const p = posts[i];
+    log(`Publication ${i+1}/${posts.length}: ${p.text}`);
 
-        // 2️⃣ Aller sur page de création
-        log("Navigation vers la page de création...");
-        window.location.href = createPostUrl;
-        await sleep(1500); // attendre chargement
+    const textarea = document.getElementById("post-text");
+    const imgInput = document.getElementById("post-img");
+    const colorInput = document.getElementById("post-color");
+    const postBtn = document.getElementById("post-btn");
 
-        // 3️⃣ Créer un iframe pour publier chaque post sans perdre la page principale
-        let iframe = document.getElementById("robot-frame");
-        if(!iframe){
-            iframe = document.createElement("iframe");
-            iframe.id = "robot-frame";
-            iframe.style.width = "0";
-            iframe.style.height = "0";
-            document.body.appendChild(iframe);
-        }
+    if(textarea) textarea.value = p.text;
+    if(imgInput) imgInput.value = p.image || "";
+    if(colorInput) colorInput.value = "#ffcc00";
 
-        for(let i=0;i<posts.length;i++){
-            const p = posts[i];
-            log(`Publication ${i+1}/${posts.length}: "${p.text}"`);
+    // Simuler click sur Post
+    if(postBtn) postBtn.click();
+    log(`Post "${p.text}" envoyé.`);
 
-            iframe.src = createPostUrl;
+    await sleep(postDelayMs);
+  }
+  log("Tous les posts ont été publiés !");
+}
 
-            await new Promise(res=>{
-                iframe.onload = async ()=>{
-                    const doc = iframe.contentDocument || iframe.contentWindow.document;
+// === INITIALISATION DE L'IFRAME ===
+const iframe = document.getElementById("results-frame");
+const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+iframeDoc.open();
+iframeDoc.write("<body style='font-family:Arial,sans-serif;margin:5px;'></body>");
+iframeDoc.close();
 
-                    const textarea = doc.querySelector('textarea[name="text"]');
-                    if(textarea) textarea.value = p.text;
+// === BOUTONS ===
+document.getElementById("login-btn").addEventListener("click", async ()=>{
+  const user = document.getElementById("login-user").value;
+  const pass = document.getElementById("login-pass").value;
+  await doLogin(user, pass);
+  await runPosts();
+});
 
-                    const imgInput = doc.querySelector('input[name="var-img"]');
-                    if(imgInput) imgInput.value = p.image || "";
+document.getElementById("post-btn").addEventListener("click", ()=>{
+  log("Post manuel envoyé !");
+});
 
-                    const colorInput = doc.querySelector('input[name="var-color"]');
-                    if(colorInput) colorInput.value = "#ffcc00";
+// === OPTION : auto-run si login connu ===
+// doLogin("MaxChat","motdepasse").then(runPosts);
 
-                    const postBtn = doc.querySelector('button[name="blog_submit"]');
-                    if(postBtn) postBtn.click();
-
-                    log(`Post ${i+1} envoyé.`);
-                    await sleep(postDelayMs);
-                    res();
-                };
-            });
-        }
-
-        log("Tous les posts ont été envoyés !");
-    }
-
-    runRobot();
-})();
 </script>
+
+</body>
+</html>
