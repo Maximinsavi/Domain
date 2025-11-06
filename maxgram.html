@@ -1,218 +1,50 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="utf-8" />
-<title>Robot MaxGram — auto login + outils</title>
+<meta charset="UTF-8">
+<title>Auto Login MaxGram</title>
 <style>
-  body{font-family:Arial,Helvetica,sans-serif;margin:16px;max-width:1000px;}
-  #log{height:160px;border:1px solid #ccc;padding:8px;overflow:auto;background:#fafafa;margin-bottom:12px;}
-  iframe{width:100%;height:520px;border:1px solid #888;margin-top:12px;}
-  pre{background:#eee;padding:8px;white-space:pre-wrap;max-height:260px;overflow:auto;}
-  button{padding:8px 12px;margin:6px 6px 6px 0;cursor:pointer}
-  .ok{color:#0a8}
-  .err{color:#c33}
-  .hint{font-size:13px;color:#555;margin-top:6px}
+body{font-family:Arial,sans-serif;background:#f7f7f7;text-align:center;padding:20px;}
+iframe{width:100%;height:500px;border:2px solid #ccc;border-radius:6px;}
+#status{font-weight:bold;margin:15px 0;color:green;}
 </style>
 </head>
 <body>
-  <h2>Robot MaxGram — auto login (Thibaut) + outils</h2>
 
-  <p><strong>Résumé :</strong> la page soumet automatiquement le login (Thibaut / 64932261) dans l'iframe, puis navigue vers la page principale et enfin vers la page de création.  
-  Si les boutons de soumission dans l'iframe ne réagissent pas, ouvre la console de l'iframe et colle le script de diagnostic/soumission ou le script d'envoi de posts (fourni ci-dessous).</p>
-
-  <div id="log"></div>
-
-  <div>
-    <button id="copyDiag">Copier script diagnostic & submit</button>
-    <button id="copyPost">Copier script d'envoi des posts</button>
-    <button id="showDiag">Afficher script diagnostic</button>
-    <button id="showPost">Afficher script posts</button>
-    <button id="forceStart">Relancer login/navigation</button>
-  </div>
-
-  <p class="hint">Pour coller le script dans la console de l'iframe : <strong>F12 → (sélecteur de frame) → Console</strong>, puis coller et Entrée.</p>
-
-  <!-- formulaire caché qui POSTe dans l'iframe -->
-  <form id="loginForm" action="//maxgram.wapaxo.com/site_login.html" method="post" target="robotFrame" style="display:none;">
-    <input name="user_name_" id="f_user" type="hidden" value="Thibaut">
-    <input name="password_" id="f_pass" type="hidden" value="64932261">
-    <input type="submit" id="f_submit" value="login">
-  </form>
-
-  <h3>Iframe MaxGram (visual)</h3>
-  <iframe id="robotFrame" name="robotFrame" src="about:blank"></iframe>
-
-  <details style="margin-top:12px;">
-    <summary>Script diagnostic & tentative de soumission (copier-coller dans la console de l'iframe)</summary>
-    <pre id="diagScript"></pre>
-  </details>
-
-  <details style="margin-top:8px;">
-    <summary>Script d'envoi des posts (copier-coller dans la console de l'iframe, page de création)</summary>
-    <pre id="postsScript"></pre>
-  </details>
+<h2>Connexion automatique à MaxGram</h2>
+<div id="status">En attente du chargement...</div>
+<iframe id="robot-frame" src="https://maxgram.wapaxo.com/site_login.html"></iframe>
 
 <script>
-/* ===== CONFIG FIXE ===== */
-const BASE_SITE = 'https://maxgram.wapaxo.com';
-const CREATE_PAGE = BASE_SITE + '/page-bot-post.html';
-const WAIT_AFTER_LOGIN_MS = 2200;
-const WAIT_AFTER_NAV_MS = 1600;
-const POSTS = [
-  { text: "Post automatique n°1 🚀", image: "" },
-  { text: "Post automatique n°2 🖼️", image: "https://via.placeholder.com/300" },
-  { text: "Post automatique n°3 🎯", image: "" }
-];
-/* ======================= */
+const username = "Thibaut";
+const password = "64932261";
+const frame = document.getElementById("robot-frame");
+const status = document.getElementById("status");
 
-const logEl = document.getElementById('log');
-function log(msg, cls){
-  const d = document.createElement('div');
-  if(cls) d.className = cls;
-  d.textContent = (new Date()).toLocaleTimeString() + ' — ' + msg;
-  logEl.appendChild(d);
-  logEl.scrollTop = logEl.scrollHeight;
-  console.log(msg);
-}
+frame.onload = () => {
+  status.textContent = "🔄 Page chargée, tentative de connexion...";
+  try {
+    const doc = frame.contentDocument || frame.contentWindow.document;
 
-/* --- SCRIPTS (à coller dans la console de l'iframe) --- */
+    // Remplir les champs si présents
+    const userField = doc.querySelector('input[name="user_name_"]');
+    const passField = doc.querySelector('input[name="password_"]');
+    const submitBtn = doc.querySelector('input[type="submit"]');
 
-/* 1) Diagnostic & multi-method submit */
-const diagScript = `(async function debugAndSubmit(){
-  function log(...a){ console.log('[BOT] ', ...a); }
-  function err(...a){ console.error('[BOT] ', ...a); }
-  log('Début debug/soumission...');
-  const forms = Array.from(document.querySelectorAll('form'));
-  const buttons = Array.from(document.querySelectorAll('button, input[type="submit"], input[type="button"]'));
-  log('Formulaires trouvés:', forms.length);
-  forms.forEach((f,i)=> log(' form['+i+'] name/id:', f.getAttribute('name'), f.id, 'action:', f.action, 'method:', f.method));
-  log('Boutons trouvés:', buttons.length);
-  buttons.forEach((b,i)=> log(' button['+i+']', b.tagName, b.type, b.name, b.id, 'text:', (b.innerText||b.value||'').trim()));
-  const form = forms[0] || null;
-  if(!form){ err('Aucun formulaire trouvé => impossible de submit automatiquement.'); return; }
-  const hiddenInputs = Array.from(form.querySelectorAll('input[type=\"hidden\"], input[name]')).map(i=>({name:i.name, value:i.value}));
-  log('Hidden inputs (extraits du form):', hiddenInputs);
-  const submitCandidates = Array.from(form.querySelectorAll('button[type=\"submit\"], input[type=\"submit\"], button, [role=\"button\"]'));
-  log('submitCandidates:', submitCandidates.length);
-  submitCandidates.forEach((s,i)=>{ log(' candidate['+i+']', s.tagName, s.type, 'disabled=', s.disabled, 'hidden=', s.hidden, 'display=', getComputedStyle(s).display); });
-
-  async function trySubmit() {
-    try{
-      if(typeof form.requestSubmit === 'function'){ log('Essayons form.requestSubmit() ...'); form.requestSubmit(); return { method: 'requestSubmit' }; }
-    }catch(e){ err('requestSubmit error', e); }
-    try{ log('Essayons form.submit() ...'); form.submit(); return { method: 'submit' }; }catch(e){ err('submit() error', e); }
-    for(const s of submitCandidates){
-      try{
-        log('Tentative click synthétique sur', s);
-        ['mousedown','mouseup','click'].forEach(type=>{ const ev = new MouseEvent(type, {view: window, bubbles: true, cancelable: true}); s.dispatchEvent(ev); });
-        return { method: 'synthetic-click', element: s };
-      }catch(e){ err('synthetic-click error', e); }
+    if(userField && passField && submitBtn){
+      userField.value = username;
+      passField.value = password;
+      status.textContent = "✅ Informations remplies, connexion...";
+      submitBtn.click(); // envoi automatique
+    } else {
+      status.textContent = "⚠️ Formulaire introuvable sur cette page.";
     }
-    try{ log('Dispatching submit Event sur le form ...'); const ev = new Event('submit', {bubbles:true, cancelable:true}); form.dispatchEvent(ev); return { method: 'dispatch-submit' }; }catch(e){ err('dispatch-submit error', e); }
-    return { method: 'none' };
+  } catch(e){
+    status.textContent = "⚠️ Erreur d’accès au contenu (protection du site).";
+    console.error(e);
   }
-
-  const ta = form.querySelector('textarea[name=\"text\"], textarea');
-  if(ta){ log('Remplissage textarea de test.'); ta.value = ta.value || 'Test auto-submit (bot)'; ta.dispatchEvent(new Event('input',{bubbles:true})); }
-
-  const required = Array.from(form.querySelectorAll('[required]')).map(e=>({tag:e.tagName,name:e.name,id:e.id,type:e.type||null}));
-  if(required.length) log('Champs required détectés:', required);
-
-  const res = await trySubmit();
-  log('Tentative de soumission via:', res.method, res.element ? res.element : '');
-  await new Promise(r => setTimeout(r, 1800));
-  const errorNodes = Array.from(document.querySelectorAll('.error, .alert, .notify, .validation, .message')).filter(n=>n.textContent.trim());
-  if(errorNodes.length){ log('Messages d\\'erreur trouvés sur la page:'); errorNodes.forEach(n=> log(' -', n.textContent.trim().slice(0,200))); }
-  else { log('Aucun message d\\'erreur évident trouvé (vérifier manuellement si la soumission a fonctionné).'); }
-  log('FIN debug. Si la soumission n\\'a pas fonctionné, vérifie token CSRF, handlers JS demandant user gesture, reCAPTCHA, ou response réseau (onglet Network).');
-})();`;
-
-/* 2) Script d'envoi des posts (à exécuter sur la page de création) */
-const postsScript = `(function(){
-  const posts = ${JSON.stringify(POSTS, null, 2)};
-  const delay = 3000;
-  async function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
-  async function run(){
-    console.log('▶ Script Auto-Post : démarrage');
-    const textarea = document.querySelector('textarea[name=\"text\"]') || document.querySelector('textarea');
-    const imgInput = document.querySelector('input[name=\"var-img\"]') || document.querySelector('input[type=\"text\"]');
-    const submitBtn = document.querySelector('button[name=\"blog_submit\"]') || document.querySelector('button[type=\"submit\"]') || document.querySelector('input[type=\"submit\"]');
-    if(!textarea || !submitBtn){
-      console.error('❌ Formulaire introuvable. Vérifie la page de création et adapte les selecteurs.');
-      return;
-    }
-    for(let i=0;i<posts.length;i++){
-      const p = posts[i];
-      console.log('→ Publication ' + (i+1) + '/' + posts.length + ':', p.text);
-      textarea.value = p.text;
-      textarea.dispatchEvent(new Event('input',{bubbles:true}));
-      if(imgInput){
-        imgInput.value = p.image || '';
-        imgInput.dispatchEvent(new Event('input',{bubbles:true}));
-      }
-      submitBtn.click();
-      console.log('Click submit envoyé');
-      await sleep(delay);
-    }
-    console.log('✅ Tous les posts envoyés.');
-  }
-  run();
-})();`;
-
-/* set pre contents */
-document.getElementById('diagScript').textContent = diagScript;
-document.getElementById('postsScript').textContent = postsScript;
-
-/* copy helpers */
-async function copyToClipboard(text){
-  try{
-    await navigator.clipboard.writeText(text);
-    return true;
-  }catch(e){
-    // fallback: create textarea
-    const ta = document.createElement('textarea');
-    ta.value = text;
-    document.body.appendChild(ta);
-    ta.select();
-    try{ document.execCommand('copy'); document.body.removeChild(ta); return true; } catch(err){ document.body.removeChild(ta); return false; }
-  }
-}
-
-/* buttons */
-document.getElementById('copyDiag').addEventListener('click', async ()=>{
-  const ok = await copyToClipboard(diagScript);
-  log(ok ? 'Script diagnostic copié dans le presse-papier. Colle dans la console de l\\'iframe.' : 'Impossible de copier automatiquement — sélectionne et copie manuellement.', ok ? 'ok' : 'err');
-});
-document.getElementById('copyPost').addEventListener('click', async ()=>{
-  const ok = await copyToClipboard(postsScript);
-  log(ok ? 'Script posts copié dans le presse-papier. Colle dans la console de l\\'iframe (page de création).' : 'Impossible de copier automatiquement — sélectionne et copie manuellement.', ok ? 'ok' : 'err');
-});
-document.getElementById('showDiag').addEventListener('click', ()=>{ alert('Le script diagnostic est affiché dans la section déroulante "Script diagnostic".'); });
-document.getElementById('showPost').addEventListener('click', ()=>{ alert('Le script posts est affiché dans la section déroulante "Script d\\'envoi des posts".'); });
-
-/* Auto-login + navigation sequence (auto-run at load) */
-const loginForm = document.getElementById('loginForm');
-const frame = document.getElementById('robotFrame');
-
-function autoLoginAndNavigate(){
-  log('Soumission automatique du formulaire de login (Thibaut) dans l\\'iframe…');
-  try{ loginForm.submit(); } catch(e){ log('Erreur lors de submit du formulaire : ' + e, 'err'); return; }
-  setTimeout(()=>{
-    frame.src = BASE_SITE;
-    log('Iframe navigue vers la page principale (sans params).');
-    setTimeout(()=>{
-      frame.src = CREATE_PAGE;
-      log('Iframe navigue vers la page de création : ' + CREATE_PAGE);
-      log('👉 Ouvre la console de l\\'iframe (F12 → sélectionner le frame) et colle le script diagnostic ou script posts pour lancer la publication.');
-    }, WAIT_AFTER_NAV_MS);
-  }, WAIT_AFTER_LOGIN_MS);
-}
-
-/* force start button */
-document.getElementById('forceStart').addEventListener('click', ()=>{ autoLoginAndNavigate(); log('Relance forcée demandée.'); });
-
-window.addEventListener('load', ()=>{ setTimeout(autoLoginAndNavigate, 300); });
-
+};
 </script>
+
 </body>
 </html>
