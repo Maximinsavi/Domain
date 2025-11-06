@@ -1,165 +1,75 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-<meta charset="utf-8">
-<title>Robot externe — MaxGram</title>
-<style>body{font-family:Arial,Helvetica,sans-serif;max-width:800px;margin:24px auto;padding:12px}textarea{width:100%}</style>
-</head>
-<body>
-
-<h2>Robot externe — Automatique (login → publish)</h2>
-
-<p>
-  <strong>Configuration (modifier avant usage)</strong> :
-</p>
-
-<pre id="conf" style="background:#f6f6f6;padding:10px;border-radius:6px"></pre>
-
-<button id="startBtn">Démarrer le robot</button>
-<button id="stopBtn" disabled>Arrêter</button>
-
-<div id="log" style="margin-top:16px;font-family:monospace;color:#222;background:#fff;padding:10px;border:1px solid #ddd"></div>
-
 <script>
-/*
-  === CONFIGURE ICI ===
+(function(){
+    console.log("Robot MaxGram complet démarré...");
 
-  loginUrlTemplate :
-    URL qui déclenche la connexion automatique. Exemple :
-    "https://maxgram.wapaxo.com/index?auto_login=1&user=MONUSER&pass=MONPASS"
-    (tu as dit que tu as déjà un truc pour se connecter automatiquement)
-    --> SI tu n'as pas d'URL de login qui ouvre une session, ce robot
-        ne pourra pas se connecter automatiquement (limitation navigateur).
+    // --- CONFIGURATION ---
+    const loginUrl = "/index?p=64932261&u=MaxChat"; // page qui sert à login automatique
+    const createPostUrl = "/page-creat-post.html";  // page de création
+    const posts = [
+        { text: "Premier post automatique", image: "" },
+        { text: "Deuxième post", image: "https://via.placeholder.com/400" },
+        { text: "Troisième post", image: "" }
+    ];
+    const loginDelayMs = 2000;  // délai pour que la session se crée
+    const postDelayMs = 2500;   // délai entre chaque publication
 
-  publishBase :
-    base pour publier (tel que tu l'as fourni).
-    On construit : publishBase + '?p=64932261&u=MaxChat&text=...&image=...'
+    // --- UTILITAIRES ---
+    function sleep(ms){ return new Promise(res => setTimeout(res, ms)); }
+    function log(msg){ console.log("[Robot] "+msg); }
 
-  posts : tableau d'objets { text, image } — messages à poster.
-  loginDelayMs : temps d'attente après ouverture de l'URL de login (ms)
-  postDelayMs  : délai entre chaque publication (ms)
+    async function runRobot(){
+        // 1️⃣ Aller sur login URL pour créer session
+        log("Ouverture de l'URL de connexion automatique...");
+        window.location.href = loginUrl;
+        await sleep(loginDelayMs);
 
-  Mode de navigation :
-    "same" -> on navigue dans le MÊME onglet (préserve mieux la session)
-    "new"  -> on ouvre chaque publication dans un NOUVEL onglet
-*/
+        // 2️⃣ Aller sur page de création
+        log("Navigation vers la page de création...");
+        window.location.href = createPostUrl;
+        await sleep(1500); // attendre chargement
 
-const config = {
-  // <<-- MODIFIE ICI AVEC TON URL DE LOGIN AUTOMATIQUE
-  loginUrlTemplate: "https://maxgram.wapaxo.com/index?auto_login=1&user=TON_USER&pass=TON_PASS",
+        // 3️⃣ Créer un iframe pour publier chaque post sans perdre la page principale
+        let iframe = document.getElementById("robot-frame");
+        if(!iframe){
+            iframe = document.createElement("iframe");
+            iframe.id = "robot-frame";
+            iframe.style.width = "0";
+            iframe.style.height = "0";
+            document.body.appendChild(iframe);
+        }
 
-  // Base de publication (ne change pas si c'est bien /index)
-  publishBase: "https://maxgram.wapaxo.com/index",
-  p: "64932261",
-  u: "MaxChat",
+        for(let i=0;i<posts.length;i++){
+            const p = posts[i];
+            log(`Publication ${i+1}/${posts.length}: "${p.text}"`);
 
-  // Posts à envoyer (texte et image facultative). Ajoute / modifie les lignes.
-  posts: [
-    { text: "Bonjour depuis le robot externe — post 1", image: "" },
-    { text: "Second post automatique", image: "https://via.placeholder.com/400" },
-    //{ text: "Autre message", image: "" }
-  ],
+            iframe.src = createPostUrl;
 
-  // Délai pour laisser la connexion se faire après ouverture du login URL (ms)
-  loginDelayMs: 3500,
+            await new Promise(res=>{
+                iframe.onload = async ()=>{
+                    const doc = iframe.contentDocument || iframe.contentWindow.document;
 
-  // Délai entre chaque publication (ms)
-  postDelayMs: 3000,
+                    const textarea = doc.querySelector('textarea[name="text"]');
+                    if(textarea) textarea.value = p.text;
 
-  // Mode : "same" (même onglet) ou "new" (nouvel onglet)
-  navigationMode: "same"
-};
+                    const imgInput = doc.querySelector('input[name="var-img"]');
+                    if(imgInput) imgInput.value = p.image || "";
 
+                    const colorInput = doc.querySelector('input[name="var-color"]');
+                    if(colorInput) colorInput.value = "#ffcc00";
 
-/* --- NE MODIFIE RIEN CI-DESSOUS SI TU PEUX --- */
+                    const postBtn = doc.querySelector('button[name="blog_submit"]');
+                    if(postBtn) postBtn.click();
 
-document.getElementById('conf').textContent = JSON.stringify(config, null, 2);
+                    log(`Post ${i+1} envoyé.`);
+                    await sleep(postDelayMs);
+                    res();
+                };
+            });
+        }
 
-const logEl = document.getElementById('log');
-function log(msg){
-  const t = new Date().toLocaleTimeString();
-  logEl.innerHTML += `[${t}] ${msg}<br>`;
-  logEl.scrollTop = logEl.scrollHeight;
-}
-
-let running = false;
-let stopRequested = false;
-
-document.getElementById('startBtn').addEventListener('click', startRobot);
-document.getElementById('stopBtn').addEventListener('click', () => { stopRequested = true; log("Arrêt demandé..."); });
-
-async function startRobot(){
-  if(running) return;
-  running = true;
-  stopRequested = false;
-  document.getElementById('startBtn').disabled = true;
-  document.getElementById('stopBtn').disabled = false;
-
-  try {
-    log("1) Ouverture de l'URL de connexion automatique...");
-    log("Login URL : " + config.loginUrlTemplate);
-
-    // On navigue vers l'URL de login pour créer la session
-    if(config.navigationMode === "same"){
-      // même onglet : on change location (la suite du script s'arrêtera dans cet onglet
-      // si la navigation charge une page distante). Pour contourner, on ouvre d'abord
-      // une petite fenêtre popup (same-origin with opener) n'est pas autorisé pour manipuler cross-origin,
-      // mais on peut naviguer dans le même onglet, attendre un délai, puis continuer.
-      window.location.href = config.loginUrlTemplate;
-      log("Redirection vers l'URL de login (même onglet). Attendre " + config.loginDelayMs + " ms...");
-      // si on change de page, ce script va être interrompu — c'est normal :
-      // pour relancer la suite automatiquement, garde ce fichier ouvert ET lance de nouveau après login,
-      // ou utilise mode 'new' ci-dessous.
-      // On va quand même attendre (si possible) puis tenter d'envoyer les posts si le navigateur reste sur ce fichier.
-      await sleep(config.loginDelayMs);
-    } else {
-      // mode new : ouvre la page de login dans un nouvel onglet, revient après délai
-      const w = window.open(config.loginUrlTemplate, "_blank");
-      log("Nouvel onglet de login ouvert.");
-      await sleep(config.loginDelayMs);
-      try { w.focus(); } catch(e){}
+        log("Tous les posts ont été envoyés !");
     }
 
-    if(stopRequested) throw "Arrêt demandé après login.";
-
-    log("2) Tentative d'envoi des publications...");
-    for(let i=0;i<config.posts.length;i++){
-      if(stopRequested) throw "Arrêt demandé.";
-
-      const item = config.posts[i];
-      const text = encodeURIComponent(item.text || "");
-      const img = encodeURIComponent(item.image || "");
-      const url = `${config.publishBase}?p=${encodeURIComponent(config.p)}&u=${encodeURIComponent(config.u)}&text=${text}${img ? '&image='+img : ''}`;
-
-      log(`→ Post ${i+1}/${config.posts.length} -> ${item.text}${item.image ? ' (image)':''}`);
-      if(config.navigationMode === "new"){
-        window.open(url, "_blank");
-      } else {
-        // même onglet : navigue vers l'URL de publication (préserve session si login réussi)
-        window.location.href = url;
-      }
-
-      log("Ouverture/Redirection faite : " + url);
-      await sleep(config.postDelayMs);
-    }
-
-    log("Toutes les publications ont été traitées.");
-    // Optionnel: aller sur la page de création à la fin
-    log("Navigation finale vers /page-creat-post.html");
-    window.location.href = "https://maxgram.wapaxo.com/page-creat-post.html";
-
-  } catch(err){
-    log("Erreur/arrêt : " + String(err));
-  } finally {
-    running = false;
-    document.getElementById('startBtn').disabled = false;
-    document.getElementById('stopBtn').disabled = true;
-  }
-}
-
-function sleep(ms){ return new Promise(res => setTimeout(res, ms)); }
-
+    runRobot();
+})();
 </script>
-
-</body>
-</html>
