@@ -1,49 +1,47 @@
 <!DOCTYPE html>
 <html lang="fr">
-<head>
-<meta charset="UTF-8">
-<title>Robot MaxGram Auto</title>
-</head>
-<body>
+<head><meta charset="utf-8"><title>Robot Launcher - MaxGram</title></head>
+<body style="font-family:Arial,Helvetica,sans-serif;max-width:800px;margin:30px auto;">
+  <h2>Robot Launcher — MaxGram</h2>
 
-<h2>Robot de publication automatique</h2>
-<button id="startBtn">Commencer le robot</button>
-<div id="log" style="margin-top:20px; font-family:monospace;"></div>
+  <label>Texte à poster</label><br>
+  <textarea id="text" rows="4" style="width:100%">Bonjour depuis le robot !</textarea><br><br>
+
+  <label>Image (URL) — facultatif</label><br>
+  <input id="image" style="width:100%" placeholder="https://.../photo.jpg"><br><br>
+
+  <label>Mode</label><br>
+  <select id="mode">
+    <option value="open">Ouvrir dans un nouvel onglet (manuel)</option>
+    <option value="silent">Ouvrir en background (target _self)</option>
+  </select><br><br>
+
+  <button id="go">Ouvrir la page de publication</button>
+
+  <div id="log" style="margin-top:18px;color:#333;font-family:monospace;"></div>
 
 <script>
-const log = (msg) => {
-    document.getElementById('log').innerHTML += msg + '<br>';
-};
+const base = "https://maxgram.wapaxo.com/index";
+const p = "64932261";
+const u = "MaxChat";
 
-document.getElementById('startBtn').addEventListener('click', () => {
-    log("Étape 1 : remplir le texte...");
-    const textarea = document.querySelector('textarea[name="text"]');
-    if(!textarea) return log("Textarea non trouvée !");
-    textarea.value = "Hello from robot!"; // texte à publier
-    log("Texte rempli : " + textarea.value);
+function log(msg){ document.getElementById('log').innerHTML += msg + "<br>"; }
 
-    log("Étape 2 : ajouter l'image...");
-    const imgInput = document.querySelector('input[name="var-img"]');
-    if(imgInput) {
-        imgInput.value = "https://exemple.com/photo.jpg";
-        log("Image ajoutée : " + imgInput.value);
-    } else log("Champ image non trouvé");
+document.getElementById('go').addEventListener('click', () => {
+  const text = encodeURIComponent(document.getElementById('text').value || "");
+  const image = encodeURIComponent(document.getElementById('image').value || "");
+  const url = `${base}?p=${p}&u=${u}&text=${text}${image ? '&image='+image : ''}`;
 
-    log("Étape 3 : définir la couleur...");
-    const colorInput = document.querySelector('input[name="var-color"]');
-    if(colorInput) {
-        colorInput.value = "#ffcc00"; // couleur de fond
-        log("Couleur définie : " + colorInput.value);
-    } else log("Champ couleur non trouvé");
-
-    log("Étape 4 : cliquer sur Publier...");
-    const postBtn = document.querySelector('button[name="blog_submit"]');
-    if(postBtn) {
-        postBtn.click();
-        log("Bouton Post cliqué !");
-    } else log("Bouton Post non trouvé");
+  log("URL construite : " + url);
+  const mode = document.getElementById('mode').value;
+  if(mode === 'open'){
+    window.open(url, "_blank");
+    log("Nouvel onglet ouvert.");
+  } else {
+    window.location.href = url;
+    log("Redirection en cours...");
+  }
 });
 </script>
-
 </body>
 </html>
