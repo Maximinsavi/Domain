@@ -2,62 +2,55 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8" />
-<title>Robot MaxGram — mono‑compte (iframe)</title>
+<title>Robot MaxGram — auto login Thibaut</title>
 <style>
   body{font-family:Arial,Helvetica,sans-serif;margin:18px;max-width:900px;}
-  #log{height:180px;border:1px solid #ccc;padding:8px;overflow:auto;background:#fafafa;margin-bottom:12px;}
+  #log{height:160px;border:1px solid #ccc;padding:8px;overflow:auto;background:#fafafa;margin-bottom:12px;}
   iframe{width:100%;height:520px;border:1px solid #888;margin-top:12px;}
-  label{display:block;margin-top:8px}
-  input,button{padding:8px;font-size:14px}
   pre{background:#eee;padding:8px;white-space:pre-wrap;}
   .ok{color:#0a8}
   .err{color:#c33}
+  button{padding:8px 12px;margin-right:8px}
 </style>
 </head>
 <body>
 
-<h2>Robot MaxGram — mono‑compte</h2>
+<h2>Robot MaxGram — auto login (Thibaut)</h2>
 
 <div id="log"></div>
 
 <div>
-  <label>Nom d'utilisateur (username) :</label>
-  <input id="usernameField" type="text" placeholder="ex: Thibaut" value=""/>
-  <label>Mot de passe :</label>
-  <input id="pwdField" type="password" placeholder="mot de passe" value=""/>
-  <div style="margin-top:8px;">
-    <button id="saveBtn">Enregistrer et lancer</button>
-    <button id="genScriptBtn">Afficher script pour la console (création)</button>
-  </div>
+  <button id="showScriptBtn">Afficher script (coller dans la console de l'iframe)</button>
+  <button id="forceStartBtn">Relancer login / navigation (forcer)</button>
 </div>
 
 <!-- formulaire caché qui POSTe dans l'iframe -->
 <form id="loginForm" action="//maxgram.wapaxo.com/site_login.html" method="post" target="robotFrame" style="display:none;">
-  <input name="user_name_" id="f_user" type="hidden" value="">
-  <input name="password_" id="f_pass" type="hidden" value="">
-  <input type="submit" id="f_submit" value="login">
+  <!-- Username et mot de passe PRÉ‑DÉFINIS -->
+  <input name="user_name_" id="f_user" type="hidden" value="Thibaut">
+  <input name="password_" id="f_pass" type="hidden" value="64932261">
+  <input type="submit" name="login_user" id="f_submit" value="login">
 </form>
 
 <iframe id="robotFrame" name="robotFrame" src="about:blank"></iframe>
 
 <details style="margin-top:12px;">
-  <summary>Script (copiable) — coller dans la console de l'iframe pour poster automatiquement</summary>
+  <summary>Script à coller dans la console de l'iframe (en mode page de création)</summary>
   <pre id="consoleScript"></pre>
 </details>
 
 <script>
-/* CONFIG — modifie posts si besoin */
-const BASE_SITE = 'https://maxgram.wapaxo.com';
+/* ==== CONFIG FIXE ==== */
+const BASE_SITE = 'https://maxgram.wapaxo.com';               // sans ?u=...&p=...
 const CREATE_PAGE = BASE_SITE + '/page-bot-post.html';
-const WAIT_AFTER_LOGIN_MS = 3000;
-const WAIT_AFTER_NAV_MS = 2000;
-
+const WAIT_AFTER_LOGIN_MS = 2200;   // attente après POST login
+const WAIT_AFTER_NAV_MS = 1600;     // attente après navigation
 const POSTS = [
   { text: "Post automatique n°1 🚀", image: "" },
   { text: "Post automatique n°2 🖼️", image: "https://via.placeholder.com/300" },
   { text: "Post automatique n°3 🎯", image: "" }
 ];
-/* --- */
+/* ===================== */
 
 const logEl = document.getElementById('log');
 function log(msg, cls){
@@ -69,7 +62,7 @@ function log(msg, cls){
   console.log(msg);
 }
 
-// fill console script area
+// préparer le script à coller dans la console de l'iframe (page de création)
 function makeConsoleScript(posts, delay=3000){
   return `(function(){
   const posts = ${JSON.stringify(posts, null, 2)};
@@ -81,7 +74,7 @@ function makeConsoleScript(posts, delay=3000){
     const imgInput = document.querySelector('input[name="var-img"]') || document.querySelector('input[type="text"]');
     const submitBtn = document.querySelector('button[name="blog_submit"]') || document.querySelector('button[type="submit"]') || document.querySelector('input[type="submit"]');
     if(!textarea || !submitBtn){
-      console.error('❌ Formulaire introuvable. Vérifie la page de création.');
+      console.error('❌ Formulaire introuvable. Vérifie la page de création et adapte les selecteurs.');
       return;
     }
     for(let i=0;i<posts.length;i++){
@@ -105,62 +98,55 @@ function makeConsoleScript(posts, delay=3000){
 
 document.getElementById('consoleScript').textContent = makeConsoleScript(POSTS, 3000);
 
-// main actions
+// actions principales
 const loginForm = document.getElementById('loginForm');
 const fUser = document.getElementById('f_user');
 const fPass = document.getElementById('f_pass');
 const frame = document.getElementById('robotFrame');
 
-function doAutoLogin(username, password){
-  if(!username || !password){
-    log('⚠️ Username ou password vide — impossible de lancer.', 'err');
-    return;
-  }
-  // fill hidden form and submit into iframe (POST)
-  fUser.value = username;
-  fPass.value = password;
+// Auto-login + navigation sequence
+function autoLoginAndNavigate(){
+  log('Soumission automatique du formulaire de login (Thibaut) dans l\'iframe…');
   try{
     loginForm.submit();
-    log('Formulaire de login soumis dans l\'iframe pour ' + username);
   }catch(e){
-    log('Erreur submit login: '+e, 'err');
+    log('Erreur lors de submit du formulaire : ' + e, 'err');
     return;
   }
-  // after small wait, navigate iframe to base site then to create page
-  setTimeout(()=> {
-    frame.src = BASE_SITE; 
-    log('Iframe navigue vers la page principale du site (sans params).');
+
+  // Après POST, forcer l'iframe vers la base (sans query) puis vers la page de création
+  setTimeout(()=>{
+    frame.src = BASE_SITE;
+    log('Iframe navigue vers la page principale (sans params).');
     setTimeout(()=>{
       frame.src = CREATE_PAGE;
       log('Iframe navigue vers la page de création : ' + CREATE_PAGE);
-      // note: pour poster réellement, il faut coller le script ci‑dessous dans la console de l'iframe
+      log('👉 Ouvre la console de l\'iframe (F12 → sélection du frame) et colle le script dans <details> pour lancer les posts.');
     }, WAIT_AFTER_NAV_MS);
   }, WAIT_AFTER_LOGIN_MS);
 }
 
-// save + start button
-document.getElementById('saveBtn').addEventListener('click', ()=>{
-  const u = document.getElementById('usernameField').value.trim();
-  const p = document.getElementById('pwdField').value;
-  if(!u || !p){ log('Remplis username et mot de passe avant de lancer.', 'err'); return; }
-  log('Démarrage automatique pour '+u);
-  doAutoLogin(u,p);
+// bouton pour forcer relance manuelle
+document.getElementById('forceStartBtn').addEventListener('click', () => {
+  autoLoginAndNavigate();
+  log('Relance forcée demandée.');
 });
 
-// generate script button
-document.getElementById('genScriptBtn').addEventListener('click', ()=>{
+// montrer le script pour copier/coller
+document.getElementById('showScriptBtn').addEventListener('click', () => {
   const s = document.getElementById('consoleScript').textContent;
-  log('Script pour la console affiché ci‑dessous. Copie et colle dans la console de l\'iframe (F12 → sélectionner le frame → Console).', 'ok');
+  log('Script de publication prêt (copie depuis le panneau ci‑dessous).', 'ok');
   console.log(s);
 });
 
-// optionally auto-run on page load if inputs prefilled
-window.addEventListener('load', ()=>{
-  const u = document.getElementById('usernameField').value.trim();
-  const p = document.getElementById('pwdField').value;
-  // si tu as déjà rempli ces champs dans le HTML, décommente la ligne ci‑dessous pour auto‑lancer:
-  // if(u && p) doAutoLogin(u,p);
+// Auto-run : lancer automatiquement au chargement de la page parente
+window.addEventListener('load', () => {
+  // Lancement automatique immédiat
+  setTimeout(() => {
+    autoLoginAndNavigate();
+  }, 300);
 });
 </script>
+
 </body>
 </html>
