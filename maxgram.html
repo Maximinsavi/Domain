@@ -1,132 +1,87 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="utf-8" />
-<title>Robot Multi‑MaxGram — sans ?u=&p=</title>
+<title>Robot MaxGram — mono‑compte (iframe)</title>
 <style>
-  body{font-family:Arial,Helvetica,sans-serif;margin:16px;max-width:1100px;}
-  textarea,input,button{font-size:14px;}
-  textarea#profiles{width:100%;height:140px;}
-  #log{height:200px;border:1px solid #ccc;padding:8px;overflow:auto;background:#fafafa;margin-top:8px;}
+  body{font-family:Arial,Helvetica,sans-serif;margin:18px;max-width:900px;}
+  #log{height:180px;border:1px solid #ccc;padding:8px;overflow:auto;background:#fafafa;margin-bottom:12px;}
   iframe{width:100%;height:520px;border:1px solid #888;margin-top:12px;}
-  .row{display:flex;gap:8px;margin-top:8px;}
-  .small{width:160px;}
+  label{display:block;margin-top:8px}
+  input,button{padding:8px;font-size:14px}
+  pre{background:#eee;padding:8px;white-space:pre-wrap;}
   .ok{color:#0a8}
   .err{color:#c33}
-  pre{background:#eee;padding:8px;white-space:pre-wrap;}
 </style>
 </head>
 <body>
-  <h2>Robot Multi‑MaxGram — Login iframe (sans query params)</h2>
 
-  <p>
-    Entrez la liste de profils (un par ligne), format : <code>username|p</code><br>
-    Exemple : <code>Thibaut|64932261</code>
-  </p>
+<h2>Robot MaxGram — mono‑compte</h2>
 
-  <textarea id="profiles" placeholder="Thibaut|64932261
-maximin|64932261"></textarea>
+<div id="log"></div>
 
+<div>
+  <label>Nom d'utilisateur (username) :</label>
+  <input id="usernameField" type="text" placeholder="ex: Thibaut" value=""/>
+  <label>Mot de passe :</label>
+  <input id="pwdField" type="password" placeholder="mot de passe" value=""/>
   <div style="margin-top:8px;">
-    <label>Mot de passe utilisé pour tous les comptes (remplace ici) :</label><br>
-    <input id="sharedPwd" type="password" placeholder="motdepasse partagé" style="width:320px" />
-    <button id="savePwd">Enregistrer</button>
+    <button id="saveBtn">Enregistrer et lancer</button>
+    <button id="genScriptBtn">Afficher script pour la console (création)</button>
   </div>
+</div>
 
-  <div class="row">
-    <button id="startAll">Lancer tout (login + open create pour chaque profil)</button>
-    <button id="stopAll" disabled>Arrêter</button>
-    <button id="generateAllScripts">Générer/Préparer tous les scripts (copiable)</button>
-  </div>
+<!-- formulaire caché qui POSTe dans l'iframe -->
+<form id="loginForm" action="//maxgram.wapaxo.com/site_login.html" method="post" target="robotFrame" style="display:none;">
+  <input name="user_name_" id="f_user" type="hidden" value="">
+  <input name="password_" id="f_pass" type="hidden" value="">
+  <input type="submit" id="f_submit" value="login">
+</form>
 
-  <div id="log"></div>
+<iframe id="robotFrame" name="robotFrame" src="about:blank"></iframe>
 
-  <!-- hidden form target iframe -->
-  <form id="loginForm" action="//maxgram.wapaxo.com/site_login.html" method="post" target="robotFrame" style="display:none;">
-    <input name="user_name_" id="f_user" type="hidden" value="Thibaut">
-    <input name="password_" id="f_pass" type="hidden" value="64932261">
-    <input type="submit" name="login_user" id="f_submit" value="login">
-  </form>
-
-  <h3>Iframe MaxGram (visual)</h3>
-  <iframe id="robotFrame" name="robotFrame" src="about:blank"></iframe>
-
-  <details style="margin-top:12px;">
-    <summary>Script d'exemple (à coller dans la console de l'iframe pour envoyer les posts)</summary>
-    <pre id="sampleScript"></pre>
-  </details>
+<details style="margin-top:12px;">
+  <summary>Script (copiable) — coller dans la console de l'iframe pour poster automatiquement</summary>
+  <pre id="consoleScript"></pre>
+</details>
 
 <script>
-/* ===== CONFIG ===== */
-const BASE_SITE = 'https://maxgram.wapaxo.com';               // <--- sans ?u=...&p=...
+/* CONFIG — modifie posts si besoin */
+const BASE_SITE = 'https://maxgram.wapaxo.com';
 const CREATE_PAGE = BASE_SITE + '/page-bot-post.html';
-const WAIT_AFTER_POST_LOGIN_MS = 3000; // attente après login POST
-const WAIT_AFTER_NAV_MS = 2500; // attente après navigation vers profile/create
+const WAIT_AFTER_LOGIN_MS = 3000;
+const WAIT_AFTER_NAV_MS = 2000;
+
 const POSTS = [
-  { text: "Post auto 1 🚀", image: "" },
-  { text: "Post auto 2 🖼️", image: "https://via.placeholder.com/300" }
+  { text: "Post automatique n°1 🚀", image: "" },
+  { text: "Post automatique n°2 🖼️", image: "https://via.placeholder.com/300" },
+  { text: "Post automatique n°3 🎯", image: "" }
 ];
-/* ================== */
+/* --- */
 
-const profilesEl = document.getElementById('profiles');
 const logEl = document.getElementById('log');
-const frame = document.getElementById('robotFrame');
-const fUser = document.getElementById('f_user');
-const fPass = document.getElementById('f_pass');
-const fSubmit = document.getElementById('f_submit');
-const loginForm = document.getElementById('loginForm');
-
-let stopRequested = false;
-let storedPwd = '';
-
-function appendLog(txt, cls){
+function log(msg, cls){
   const d = document.createElement('div');
   if(cls) d.className = cls;
-  d.textContent = (new Date()).toLocaleTimeString() + ' — ' + txt;
+  d.textContent = (new Date()).toLocaleTimeString() + ' — ' + msg;
   logEl.appendChild(d);
   logEl.scrollTop = logEl.scrollHeight;
-  console.log(txt);
+  console.log(msg);
 }
 
-document.getElementById('savePwd').addEventListener('click', () => {
-  storedPwd = document.getElementById('sharedPwd').value || '';
-  if(!storedPwd) {
-    appendLog('⚠️ Mot de passe vide — entre le mot de passe partagé.', 'err');
-  } else {
-    appendLog('Mot de passe enregistré (en mémoire du navigateur).', 'ok');
-  }
-});
-
-// parse profiles textarea into array of {u,p}
-function parseProfiles(){
-  const lines = profilesEl.value.split('\n').map(l => l.trim()).filter(Boolean);
-  const arr = [];
-  for(const ln of lines){
-    const parts = ln.split('|').map(s=>s.trim());
-    if(parts.length < 2){
-      appendLog('Ligne ignorée (format invalide): ' + ln, 'err');
-      continue;
-    }
-    arr.push({ u: parts[0], p: parts[1] });
-  }
-  return arr;
-}
-
-// generate per-profile console-script to paste in iframe
-function makeConsoleScriptForProfile(profile, posts=POSTS, delay=3000){
-  const postsStr = JSON.stringify(posts, null, 2);
-  // script uses base site content (no reliance on ?u=...&p=...), works on creation page
+// fill console script area
+function makeConsoleScript(posts, delay=3000){
   return `(function(){
-  const posts = ${postsStr};
+  const posts = ${JSON.stringify(posts, null, 2)};
   const delay = ${delay};
   async function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
   async function run(){
-    console.log('▶ Script Auto-Post — démarrage');
+    console.log('▶ Script Auto‑Post : démarrage');
     const textarea = document.querySelector('textarea[name="text"]') || document.querySelector('textarea');
     const imgInput = document.querySelector('input[name="var-img"]') || document.querySelector('input[type="text"]');
     const submitBtn = document.querySelector('button[name="blog_submit"]') || document.querySelector('button[type="submit"]') || document.querySelector('input[type="submit"]');
     if(!textarea || !submitBtn){
-      console.error('❌ Formulaire introuvable sur la page de création. Vérifie les sélecteurs.');
+      console.error('❌ Formulaire introuvable. Vérifie la page de création.');
       return;
     }
     for(let i=0;i<posts.length;i++){
@@ -142,101 +97,70 @@ function makeConsoleScriptForProfile(profile, posts=POSTS, delay=3000){
       console.log('Click submit envoyé');
       await sleep(delay);
     }
-    console.log('✅ Tous les posts envoyés pour ${profile.u}');
+    console.log('✅ Tous les posts envoyés.');
   }
   run();
 })();`;
 }
 
-// show sample script area
-function showSampleScript(text){
-  document.getElementById('sampleScript').textContent = text;
+document.getElementById('consoleScript').textContent = makeConsoleScript(POSTS, 3000);
+
+// main actions
+const loginForm = document.getElementById('loginForm');
+const fUser = document.getElementById('f_user');
+const fPass = document.getElementById('f_pass');
+const frame = document.getElementById('robotFrame');
+
+function doAutoLogin(username, password){
+  if(!username || !password){
+    log('⚠️ Username ou password vide — impossible de lancer.', 'err');
+    return;
+  }
+  // fill hidden form and submit into iframe (POST)
+  fUser.value = username;
+  fPass.value = password;
+  try{
+    loginForm.submit();
+    log('Formulaire de login soumis dans l\'iframe pour ' + username);
+  }catch(e){
+    log('Erreur submit login: '+e, 'err');
+    return;
+  }
+  // after small wait, navigate iframe to base site then to create page
+  setTimeout(()=> {
+    frame.src = BASE_SITE; 
+    log('Iframe navigue vers la page principale du site (sans params).');
+    setTimeout(()=>{
+      frame.src = CREATE_PAGE;
+      log('Iframe navigue vers la page de création : ' + CREATE_PAGE);
+      // note: pour poster réellement, il faut coller le script ci‑dessous dans la console de l'iframe
+    }, WAIT_AFTER_NAV_MS);
+  }, WAIT_AFTER_LOGIN_MS);
 }
 
-// START processing all profiles sequentially: login -> open base site -> open create page
-document.getElementById('startAll').addEventListener('click', async ()=>{
-  stopRequested = false;
-  const list = parseProfiles();
-  if(list.length === 0){
-    appendLog('Aucun profil trouvé. Ajoute des lignes "user|p" dans la zone.', 'err');
-    return;
-  }
-  if(!storedPwd){
-    appendLog('⚠️ Mot de passe partagé non défini. Clique "Enregistrer" après saisie.', 'err');
-    return;
-  }
-  document.getElementById('startAll').disabled = true;
-  document.getElementById('stopAll').disabled = false;
-  appendLog('Démarrage du traitement pour ' + list.length + ' profil(s) ...');
-
-  for(let i=0;i<list.length && !stopRequested;i++){
-    const prof = list[i];
-    appendLog(`--- Traitement (${i+1}/${list.length}): ${prof.u} | p=${prof.p} ---`);
-    // set login form values (use storedPwd)
-    fUser.value = prof.u;
-    fPass.value = storedPwd;
-
-    // submit form to iframe (POST to site_login.html in iframe)
-    try{
-      loginForm.submit();
-      appendLog('Formulaire de login soumis dans l\'iframe pour ' + prof.u);
-    } catch(e){
-      appendLog('Erreur lors de la soumission du formulaire: ' + e, 'err');
-      continue;
-    }
-
-    // after small wait, navigate iframe to the base site (no ?u=...&p=)
-    await new Promise(r => setTimeout(r, WAIT_AFTER_POST_LOGIN_MS));
-    const baseUrl = BASE_SITE; // no query params
-    frame.src = baseUrl;
-    appendLog('Iframe navigue vers ' + baseUrl);
-
-    // wait for base site load (we cannot read DOM cross-origin reliably, so wait fixed ms)
-    await new Promise(r => setTimeout(r, WAIT_AFTER_NAV_MS));
-
-    // navigate to create page
-    appendLog('Ouverture de la page de création pour ' + prof.u);
-    frame.src = CREATE_PAGE;
-    await new Promise(r => setTimeout(r, WAIT_AFTER_NAV_MS));
-
-    // generate console script for this profile and display it for copy
-    const cs = makeConsoleScriptForProfile(prof, POSTS, 3000);
-    showSampleScript(cs);
-    appendLog('Script pour poster généré pour ' + prof.u + '. Copie-le et colle-le dans la console de l\'iframe pour lancer les publications.');
-    appendLog('--- Fin du profil ' + prof.u + ' ---');
-
-    // small pause before next profile
-    await new Promise(r => setTimeout(r, 1200));
-  }
-
-  appendLog('Traitement terminé.');
-  document.getElementById('startAll').disabled = false;
-  document.getElementById('stopAll').disabled = true;
+// save + start button
+document.getElementById('saveBtn').addEventListener('click', ()=>{
+  const u = document.getElementById('usernameField').value.trim();
+  const p = document.getElementById('pwdField').value;
+  if(!u || !p){ log('Remplis username et mot de passe avant de lancer.', 'err'); return; }
+  log('Démarrage automatique pour '+u);
+  doAutoLogin(u,p);
 });
 
-// stop
-document.getElementById('stopAll').addEventListener('click', ()=>{
-  stopRequested = true;
-  appendLog('Arrêt demandé par l\'utilisateur.');
-  document.getElementById('startAll').disabled = false;
-  document.getElementById('stopAll').disabled = true;
+// generate script button
+document.getElementById('genScriptBtn').addEventListener('click', ()=>{
+  const s = document.getElementById('consoleScript').textContent;
+  log('Script pour la console affiché ci‑dessous. Copie et colle dans la console de l\'iframe (F12 → sélectionner le frame → Console).', 'ok');
+  console.log(s);
 });
 
-// generate scripts for all profiles at once into sampleScript
-document.getElementById('generateAllScripts').addEventListener('click', ()=>{
-  const list = parseProfiles();
-  if(list.length === 0){ appendLog('Aucun profil trouvé pour générer', 'err'); return; }
-  const all = list.map(p => `/* Script pour ${p.u} */\n${makeConsoleScriptForProfile(p)}\n\n`).join('\n');
-  showSampleScript(all);
-  appendLog('Scripts générés pour ' + list.length + ' profil(s). Copie celui que tu veux et colle dans la console de l\'iframe.');
+// optionally auto-run on page load if inputs prefilled
+window.addEventListener('load', ()=>{
+  const u = document.getElementById('usernameField').value.trim();
+  const p = document.getElementById('pwdField').value;
+  // si tu as déjà rempli ces champs dans le HTML, décommente la ligne ci‑dessous pour auto‑lancer:
+  // if(u && p) doAutoLogin(u,p);
 });
-
-// initialize sample script area with first profile example
-(function init(){
-  const first = parseProfiles()[0] || {u:'example', p:'64932261'};
-  showSampleScript(makeConsoleScriptForProfile(first));
-  appendLog('Prêt — renseigne les profils, le mot de passe partagé, puis clique "Lancer tout".');
-})();
 </script>
 </body>
 </html>
