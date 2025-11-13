@@ -58,6 +58,30 @@
     overflow-y: auto;
     max-height: 400px;
   }
+
+  /* 🔔 Style pour le toast */
+  #toast {
+    visibility: hidden;
+    min-width: 200px;
+    background-color: #00bcd4;
+    color: #fff;
+    text-align: center;
+    border-radius: 8px;
+    padding: 10px;
+    position: fixed;
+    left: 50%;
+    bottom: 40px;
+    transform: translateX(-50%);
+    font-size: 16px;
+    z-index: 9999;
+    opacity: 0;
+    transition: opacity 0.5s, bottom 0.5s;
+  }
+  #toast.show {
+    visibility: visible;
+    opacity: 1;
+    bottom: 60px;
+  }
 </style>
 </head>
 <body>
@@ -68,20 +92,58 @@
   <input type="text" id="url" placeholder="Entre l'URL de ton site (ex: page.html)">
   <button onclick="loadPage()">Charger</button>
   <button onclick="showSource()">Source code</button>
-  <button onclick="copySource()">Copier</button>
+  <button onclick="copySource()">Copier code</button>
 </div>
 
 <iframe id="viewer"></iframe>
 
 <pre id="source"></pre>
 
+<!-- Boîte de notification -->
+<div id="toast">Copié ✅</div>
+
 <script>
+const iframe = document.getElementById('viewer');
+const toast = document.getElementById('toast');
+
+function showToast(msg) {
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2000);
+}
+
 function loadPage() {
   const url = document.getElementById('url').value.trim();
   if (!url) return alert('Entre une URL valide !');
-  document.getElementById('viewer').src = url;
+  iframe.src = url;
   document.getElementById('source').style.display = 'none';
 }
+
+// Quand la page dans l’iframe se charge
+iframe.addEventListener('load', () => {
+  try {
+    const currentUrl = iframe.contentWindow.location.href;
+    document.getElementById('url').value = currentUrl;
+    navigator.clipboard.writeText(currentUrl);
+    showToast("URL copiée ✅");
+
+    const links = iframe.contentDocument.querySelectorAll('a');
+    links.forEach(link => {
+      link.addEventListener('click', e => {
+        setTimeout(() => {
+          try {
+            const newUrl = iframe.contentWindow.location.href;
+            document.getElementById('url').value = newUrl;
+            navigator.clipboard.writeText(newUrl);
+            showToast("Nouvelle URL copiée ✅");
+          } catch {}
+        }, 300);
+      });
+    });
+  } catch (err) {
+    console.warn("Impossible d’accéder au contenu de l’iframe (CORS).");
+  }
+});
 
 async function showSource() {
   const url = document.getElementById('url').value.trim();
@@ -92,7 +154,7 @@ async function showSource() {
     document.getElementById('source').textContent = text;
     document.getElementById('source').style.display = 'block';
   } catch (err) {
-    alert("❌ Impossible de récupérer le code source.\nCause probable : CORS ou site externe bloqué.");
+    alert("❌ Impossible de récupérer le code source.\n(CORS bloqué ou site externe).");
   }
 }
 
@@ -100,7 +162,7 @@ function copySource() {
   const code = document.getElementById('source').textContent;
   if (!code) return alert("Aucun code à copier !");
   navigator.clipboard.writeText(code).then(() => {
-    alert("✅ Code source copié !");
+    showToast("Code source copié ✅");
   });
 }
 </script>
