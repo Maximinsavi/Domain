@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FB-TOOLS - Facebook & Instagram Name Changer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 
+                0 8px 32px 0 rgba(31, 38, 135, 0.37),
+                inset 0 1px 0 0 rgba(255, 255, 255, 0.3);
+            max-width: 600px;
+            width: 100%;
+            padding: 35px;
+            position: relative;
+            z-index: 1;
+            animation: fadeIn 0.8s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: white;
+            font-size: 32px;
+            margin-bottom: 8px;
+            text-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            font-weight: 700;
+            letter-spacing: 1.5px;
+        }
+
+        .header .version {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 11px;
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 4px 12px;
+            border-radius: 15px;
+            display: inline-block;
+            margin-bottom: 8px;
+            backdrop-filter: blur(10px);
+        }
+
+        .header .subtitle {
+            color: rgba(255, 255, 255, 0.95);
+            font-size: 13px;
+            margin-top: 8px;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: white;
+            font-weight: 600;
+            font-size: 12px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            letter-spacing: 0.3px;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            font-size: 13px;
+            color: white;
+            transition: all 0.3s ease;
+            font-family: 'Poppins', 'Roboto', sans-serif;
+        }
+
+        input::placeholder, textarea::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 12px;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.5);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 75px;
+        }
+
+        .button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.1) 100%);
+            backdrop-filter: blur(10px);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .button:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            border-color: rgba(255, 255, 255, 0.6);
+        }
+
+        .button:active {
+            transform: translateY(0);
+        }
+
+        .button:disabled {
+            background: rgba(150, 150, 150, 0.3);
+            cursor: not-allowed;
+            transform: none;
+            opacity: 0.6;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 15px;
+            display: none;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top: 3px solid white;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .info-box {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-left: 3px solid rgba(255, 255, 255, 0.6);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 25px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            line-height: 1.5;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 18px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            max-width: 600px;
+            width: 100%;
+            z-index: 1;
+            position: relative;
+        }
+
+        .developer-credit {
+            color: white;
+            font-size: 12px;
+            font-weight: 500;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .developer-credit .icon {
+            font-size: 16px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .developer-credit a {
+            color: white;
+            text-decoration: none;
+            font-weight: 700;
+            padding: 4px 10px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-size: 12px;
+        }
+
+        .developer-credit a:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .swal2-popup {
+            backdrop-filter: blur(20px);
+            background: rgba(255, 255, 255, 0.95) !important;
+            border-radius: 20px !important;
+        }
+
+        .swal2-title {
+            color: #667eea !important;
+            font-size: 20px !important;
+        }
+
+        .swal2-html-container {
+            font-size: 13px !important;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .container {
+                padding: 25px 20px;
+                border-radius: 20px;
+            }
+
+            .header h1 {
+                font-size: 26px;
+                letter-spacing: 1px;
+            }
+
+            .header .version {
+                font-size: 10px;
+                padding: 3px 10px;
+            }
+
+            .header .subtitle {
+                font-size: 11px;
+            }
+
+            label {
+                font-size: 11px;
+            }
+
+            input, textarea {
+                padding: 10px 14px;
+                font-size: 12px;
+            }
+
+            input::placeholder, textarea::placeholder {
+                font-size: 11px;
+            }
+
+            textarea {
+                min-height: 65px;
+            }
+
+            .button {
+                padding: 12px;
+                font-size: 13px;
+            }
+
+            .info-box {
+                font-size: 11px;
+                padding: 12px;
+            }
+
+            .footer {
+                padding: 12px;
+            }
+
+            .developer-credit {
+                font-size: 11px;
+            }
+
+            .developer-credit .icon {
+                font-size: 14px;
+            }
+
+            .developer-credit a {
+                font-size: 11px;
+            }
+
+            .loading {
+                padding: 12px;
+            }
+
+            .loading p {
+                font-size: 12px !important;
+            }
+
+            .spinner {
+                width: 35px;
+                height: 35px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px 15px;
+            }
+
+            .header h1 {
+                font-size: 22px;
+            }
+
+            .header .version {
+                font-size: 9px;
+            }
+
+            .header .subtitle {
+                font-size: 10px;
+            }
+
+            .form-group {
+                margin-bottom: 15px;
+            }
+
+            label {
+                font-size: 10px;
+                margin-bottom: 6px;
+            }
+
+            input, textarea {
+                padding: 9px 12px;
+                font-size: 11px;
+            }
+
+            input::placeholder, textarea::placeholder {
+                font-size: 10px;
+            }
+
+            textarea {
+                min-height: 60px;
+            }
+
+            .button {
+                padding: 11px;
+                font-size: 12px;
+            }
+
+            .info-box {
+                font-size: 10px;
+                padding: 10px;
+            }
+
+            .footer {
+                margin-top: 15px;
+                padding: 10px;
+            }
+
+            .developer-credit {
+                font-size: 10px;
+                gap: 6px;
+            }
+
+            .developer-credit .icon {
+                font-size: 13px;
+            }
+
+            .developer-credit a {
+                font-size: 10px;
+                padding: 3px 8px;
+            }
+        }
+
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+
+        .loading-screen.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .loading-logo {
+            font-size: 48px;
+            color: white;
+            font-weight: 700;
+            text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            margin-bottom: 30px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .loading-text {
+            color: white;
+            font-size: 16px;
+            margin-top: 20px;
+            font-weight: 500;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        @keyframes pulse {
+            0%, 100% { 
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% { 
+                transform: scale(1.05);
+                opacity: 0.8;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loading-logo">
+     FB-TOOLS
+        </div>
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Loading...</div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1>FB-TOOLS</h1>
+            <div class="version">VERSION 2.2</div>
+            <div class="subtitle">Facebook & Instagram Name Changer</div>
+        </div>
+
+        <div class="info-box" style="background: rgba(255, 200, 100, 0.2); border-left-color: rgba(255, 200, 100, 0.8);">
+            <strong style="font-size: 14px;"><i class="fas fa-exclamation-triangle"></i> IMPORTANT NOTICE</strong><br>
+            <span style="font-size: 11px; line-height: 1.6;">
+                <i class="fas fa-copyright"></i> 2025 ioa39rkdev. All rights reserved. This tool is for authorized use only. 
+                Unauthorized reproduction, distribution, or reverse engineering is strictly prohibited. 
+                By using this service, you agree to our terms and conditions. Your data is processed securely and not stored.
+            </span>
+        </div>
+
+        <div class="info-box">
+            This tool allows you to change your name on both Facebook and Instagram at the same time.
+        </div>
+
+        <form id="changeNameForm">
+            <div class="form-group">
+                <label for="fbCookie">Facebook Cookie/Appstate</label>
+                <textarea id="fbCookie" placeholder="Paste your Facebook cookie or appstate here..." required></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="igCookie">Instagram Cookie/Appstate</label>
+                <textarea id="igCookie" placeholder="Paste your Instagram cookie or appstate here..." required></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="newName">New Name</label>
+                <input type="text" id="newName" placeholder="Enter your new name..." required>
+            </div>
+
+            <button type="submit" class="button">Change Name</button>
+        </form>
+
+        <div class="loading" id="changeNameLoading">
+            <div class="spinner"></div>
+            <p style="margin-top: 12px; color: white; font-weight: 600; font-size: 13px;">Processing...</p>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div class="developer-credit">
+            <i class="fas fa-code icon"></i>
+            <span>Developed by</span>
+            <a href="https://github.com/Heruteah" target="_blank">ioa39rkdev</a>
+        </div>
+    </div>
+
+    <script>
+        setTimeout(function() {
+            const loader = document.getElementById('loadingScreen');
+            if (loader) {
+                loader.classList.add('hidden');
+            }
+        }, 1200);
+
+        (function() {
+            'use strict';
+            
+            const copyrightNotice = `
+╔═══════════════════════════════════════════════════════════════╗
+║                    © 2025 ioa39rkdev                          ║
+║                  FB-TOOLS v2.2 - PROTECTED                    ║
+║                                                               ║
+║  WARNING: This code is proprietary and confidential.          ║
+║  Unauthorized copying, modification, or distribution          ║
+║  is strictly prohibited and may result in legal action.       ║
+║                                                               ║
+║  All rights reserved. Patent pending.                         ║
+╚═══════════════════════════════════════════════════════════════╝
+            `;
+            
+            console.log('%c' + copyrightNotice, 'color: #ff6b6b; font-weight: bold; font-family: monospace;');
+            console.log('%c[!] ATTENTION DEVELOPERS', 'color: #ff0000; font-size: 20px; font-weight: bold;');
+            console.log('%cThis application is protected by copyright law.', 'color: #ff6b6b; font-size: 14px;');
+            console.log('%cUnauthorized access to this code may expose you to legal liability.', 'color: #ff6b6b; font-size: 12px;');
+            
+            document.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+                return false;
+            });
+            
+            document.addEventListener('keydown', function(e) {
+                if (e.ctrlKey && (e.key === 'u' || e.key === 'U' || e.key === 's' || e.key === 'S')) {
+                    e.preventDefault();
+                    return false;
+                }
+                if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'C' || e.key === 'c'))) {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+            
+            document.addEventListener('selectstart', function(e) {
+                if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+        })();
+        
+        document.getElementById('changeNameForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const fbCookie = document.getElementById('fbCookie').value.trim();
+            const igCookie = document.getElementById('igCookie').value.trim();
+            const newName = document.getElementById('newName').value.trim();
+            
+            if (!fbCookie) {
+                Swal.fire({
+                    title: 'Required Field!',
+                    text: 'Please enter your Facebook cookie or appstate.',
+                    icon: 'warning',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#f39c12',
+                    back
