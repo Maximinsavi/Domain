@@ -1,100 +1,49 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>TikTok Booster - Viewer</title>
-    <style>
-        body { font-family: Arial; padding: 20px; text-align: center; background: #111; color: white; }
-        input, select, button { padding: 12px; width: 90%; margin-top: 10px; border-radius: 10px; border: none; }
-        #phoneFrame {
-            margin-top: 20px;
-            width: 360px;
-            height: 640px;
-            margin-left: auto;
-            margin-right: auto;
-            border-radius: 40px;
-            overflow: hidden;
-            border: 6px solid #000;
-            background: #000;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>TikTok Booster</title>
+  <style>
+    body { background:#000; color:#fff; font-family:Arial; text-align:center; padding:20px; }
+    input { width:90%; padding:10px; font-size:18px; border-radius:10px; border:none; }
+    button { padding:12px 25px; font-size:18px; margin-top:10px; border-radius:10px; border:none; background:#ff0050; color:#fff; }
+    iframe { width:100%; height:600px; border:none; margin-top:20px; border-radius:20px; }
+  </style>
 </head>
 <body>
 
-<h2>TikTok Booster – Player interne</h2>
+<h1>TikTok Booster</h1>
+<input type="text" id="tiktokLink" placeholder="Colle ton lien TikTok ici">
+<button onclick="loadVideo()">Ouvrir</button>
 
-<input type="text" id="tiktokLink" placeholder="Colle le lien TikTok ici">
-<select id="device" onchange="changeDevice()">
-    <option value="android">Android</option>
-    <option value="iphone">iPhone</option>
-    <option value="ipad">iPad</option>
-    <option value="pc">PC</option>
-</select>
-<button onclick="loadVideo()">Charger la vidéo</button>
-
-<div id="phoneFrame">
-    <iframe id="viewer" width="100%" height="100%" frameborder="0"></iframe>
-</div>
+<div id="result"></div>
 
 <script>
-function extractVideoID(url) {
-    // 1️⃣ Format normal : tiktok.com/@user/video/1234567890
-    let match1 = url.match(/video\/(\d+)/);
-    if (match1) return match1[1];
-
-    // 2️⃣ Format avec paramètre : ...video/1234567890?is_from_webapp=1
-    let match2 = url.match(/video\/(\d+)\?/);
-    if (match2) return match2[1];
-
-    // 3️⃣ Format court vm.tiktok.com/xxxx
-    // On ne peut pas suivre le lien automatiquement, donc on emballe en embed direct
-    if (url.includes("vm.tiktok.com")) {
-        alert("⚠️ Les liens vm.tiktok.com doivent être collés en version complète (appuie sur Partager → Copier le lien).");
-        return null;
-    }
-
-    return null;
+async function expandUrl(url) {
+    // Dé-raccourcit automatiquement les liens vm.tiktok.com
+    const response = await fetch(url, { method: "HEAD", redirect: "follow" });
+    return response.url;
 }
 
-function loadVideo() {
-    let url = document.getElementById("tiktokLink").value;
-    let id = extractVideoID(url);
+async function loadVideo() {
+    let link = document.getElementById("tiktokLink").value.trim();
+    if (!link) return;
 
-    if (!id) {
-        alert("Lien TikTok non reconnu. Essaye de copier le lien complet depuis TikTok.");
-        return;
+    // Dé-raccourci si lien vm.tiktok.com
+    if (link.includes("vm.tiktok.com")) {
+        link = await expandUrl(link);
     }
 
-    let embedURL = "https://www.tiktok.com/embed/" + id;
-    document.getElementById("viewer").src = embedURL;
-}
+    // Nettoyage du lien
+    link = link.split("?")[0];
 
-function changeDevice() {
-    let device = document.getElementById("device").value;
-    let frame = document.getElementById("phoneFrame");
+    // Conversion en URL embed TikTok
+    const embed = `https://www.tiktok.com/embed/${link.split("/video/")[1]}`;
 
-    if (device === "android") {
-        frame.style.width = "360px";
-        frame.style.height = "640px";
-        frame.style.borderRadius = "40px";
-    }
-
-    if (device === "iphone") {
-        frame.style.width = "375px";
-        frame.style.height = "667px";
-        frame.style.borderRadius = "50px";
-    }
-
-    if (device === "ipad") {
-        frame.style.width = "768px";
-        frame.style.height = "1024px";
-        frame.style.borderRadius = "30px";
-    }
-
-    if (device === "pc") {
-        frame.style.width = "900px";
-        frame.style.height = "500px";
-        frame.style.borderRadius = "0px";
-    }
+    // Affichage dans la page
+    document.getElementById("result").innerHTML = `
+        <iframe src="${embed}" allowfullscreen></iframe>
+    `;
 }
 </script>
 
