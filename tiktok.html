@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>TikTok Booster - Auto Open</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        input, select, button { padding: 10px; width: 100%; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<h2>TikTok Booster – Auto Open</h2>
+
+<input type="text" id="tiktokLink" placeholder="Colle le lien TikTok ici">
+
+<select id="device">
+    <option value="android">Android</option>
+    <option value="iphone">iPhone</option>
+    <option value="ipad">iPad</option>
+    <option value="pc">Windows PC</option>
+</select>
+
+<button onclick="openVideo()">Ouvrir la vidéo</button>
+
+<script>
+function openVideo() {
+    let url = document.getElementById("tiktokLink").value;
+    let device = document.getElementById("device").value;
+
+    let userAgents = {
+        android: "Mozilla/5.0 (Linux; Android 12; Mobile) AppleWebKit/537.36 Chrome/118.0 Safari/537.36",
+        iphone: "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Safari/605.1.15",
+        ipad: "Mozilla/5.0 (iPad; CPU OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Safari/605.1.15",
+        pc: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/118.0 Safari/537.36"
+    };
+
+    // Construction du lien avec un proxy UA
+    let finalURL = 
+        "https://www.useragent.io/?ua=" + encodeURIComponent(userAgents[device]) 
+        + "&url=" + encodeURIComponent(url);
+
+    window.open(finalURL, "_blank");
+}
+</script>
+
+</body>
+</html>
