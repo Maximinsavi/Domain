@@ -36,17 +36,31 @@
 </div>
 
 <script>
-function extractID(url) {
-    let match = url.match(/video\/(\d+)/);
-    return match ? match[1] : null;
+function extractVideoID(url) {
+    // 1️⃣ Format normal : tiktok.com/@user/video/1234567890
+    let match1 = url.match(/video\/(\d+)/);
+    if (match1) return match1[1];
+
+    // 2️⃣ Format avec paramètre : ...video/1234567890?is_from_webapp=1
+    let match2 = url.match(/video\/(\d+)\?/);
+    if (match2) return match2[1];
+
+    // 3️⃣ Format court vm.tiktok.com/xxxx
+    // On ne peut pas suivre le lien automatiquement, donc on emballe en embed direct
+    if (url.includes("vm.tiktok.com")) {
+        alert("⚠️ Les liens vm.tiktok.com doivent être collés en version complète (appuie sur Partager → Copier le lien).");
+        return null;
+    }
+
+    return null;
 }
 
 function loadVideo() {
     let url = document.getElementById("tiktokLink").value;
-    let id = extractID(url);
+    let id = extractVideoID(url);
 
     if (!id) {
-        alert("Lien invalide !");
+        alert("Lien TikTok non reconnu. Essaye de copier le lien complet depuis TikTok.");
         return;
     }
 
