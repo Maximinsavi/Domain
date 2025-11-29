@@ -1,45 +1,86 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>TikTok Booster - Auto Open</title>
+    <title>TikTok Booster - Viewer</title>
     <style>
-        body { font-family: Arial; padding: 20px; }
-        input, select, button { padding: 10px; width: 100%; margin-top: 10px; }
+        body { font-family: Arial; padding: 20px; text-align: center; background: #111; color: white; }
+        input, select, button { padding: 12px; width: 90%; margin-top: 10px; border-radius: 10px; border: none; }
+        #phoneFrame {
+            margin-top: 20px;
+            width: 360px;
+            height: 640px;
+            margin-left: auto;
+            margin-right: auto;
+            border-radius: 40px;
+            overflow: hidden;
+            border: 6px solid #000;
+            background: #000;
+        }
     </style>
 </head>
 <body>
 
-<h2>TikTok Booster – Auto Open</h2>
+<h2>TikTok Booster – Player interne</h2>
 
 <input type="text" id="tiktokLink" placeholder="Colle le lien TikTok ici">
-
-<select id="device">
+<select id="device" onchange="changeDevice()">
     <option value="android">Android</option>
     <option value="iphone">iPhone</option>
     <option value="ipad">iPad</option>
-    <option value="pc">Windows PC</option>
+    <option value="pc">PC</option>
 </select>
+<button onclick="loadVideo()">Charger la vidéo</button>
 
-<button onclick="openVideo()">Ouvrir la vidéo</button>
+<div id="phoneFrame">
+    <iframe id="viewer" width="100%" height="100%" frameborder="0"></iframe>
+</div>
 
 <script>
-function openVideo() {
+function extractID(url) {
+    let match = url.match(/video\/(\d+)/);
+    return match ? match[1] : null;
+}
+
+function loadVideo() {
     let url = document.getElementById("tiktokLink").value;
+    let id = extractID(url);
+
+    if (!id) {
+        alert("Lien invalide !");
+        return;
+    }
+
+    let embedURL = "https://www.tiktok.com/embed/" + id;
+    document.getElementById("viewer").src = embedURL;
+}
+
+function changeDevice() {
     let device = document.getElementById("device").value;
+    let frame = document.getElementById("phoneFrame");
 
-    let userAgents = {
-        android: "Mozilla/5.0 (Linux; Android 12; Mobile) AppleWebKit/537.36 Chrome/118.0 Safari/537.36",
-        iphone: "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Safari/605.1.15",
-        ipad: "Mozilla/5.0 (iPad; CPU OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Safari/605.1.15",
-        pc: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/118.0 Safari/537.36"
-    };
+    if (device === "android") {
+        frame.style.width = "360px";
+        frame.style.height = "640px";
+        frame.style.borderRadius = "40px";
+    }
 
-    // Construction du lien avec un proxy UA
-    let finalURL = 
-        "https://www.useragent.io/?ua=" + encodeURIComponent(userAgents[device]) 
-        + "&url=" + encodeURIComponent(url);
+    if (device === "iphone") {
+        frame.style.width = "375px";
+        frame.style.height = "667px";
+        frame.style.borderRadius = "50px";
+    }
 
-    window.open(finalURL, "_blank");
+    if (device === "ipad") {
+        frame.style.width = "768px";
+        frame.style.height = "1024px";
+        frame.style.borderRadius = "30px";
+    }
+
+    if (device === "pc") {
+        frame.style.width = "900px";
+        frame.style.height = "500px";
+        frame.style.borderRadius = "0px";
+    }
 }
 </script>
 
