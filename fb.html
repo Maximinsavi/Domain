@@ -1,0 +1,33 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>FB Video Downloader</title></head>
+<body>
+  <h3>Colle l'URL de la vidéo Facebook</h3>
+  <input id="url" style="width:80%" placeholder="https://www.facebook.com/.../videos/...">
+  <button id="check">Vérifier</button>
+  <div id="info"></div>
+
+  <script>
+    document.getElementById('check').addEventListener('click', async () => {
+      const url = document.getElementById('url').value.trim();
+      if (!url) return alert('Colle une URL');
+      const resp = await fetch('/get-source', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ url })
+      });
+      const data = await resp.json();
+      if (!resp.ok) return document.getElementById('info').innerText = JSON.stringify(data);
+      // show download link
+      const d = document.getElementById('info');
+      d.innerHTML = `
+        <p>Titre: ${data.meta.title || '—'}</p>
+        <p>Durée: ${data.meta.length || '—'}</p>
+        <a href="/download?source=${encodeURIComponent(data.source)}" download> Télécharger (via proxy)</a>
+        <br>
+        <a href="${data.source}" target="_blank">Ouvrir l'URL source</a>
+      `;
+    });
+  </script>
+</body>
+</html>
