@@ -1,33 +1,81 @@
-<!doctype html>
-<html>
-<head><meta charset="utf-8"><title>FB Video Downloader</title></head>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Facebook Video Downloader</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+        background: #f0f0f0;
+    }
+    #box {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        max-width: 600px;
+        margin: auto;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+</style>
+</head>
 <body>
-  <h3>Colle l'URL de la vidéo Facebook</h3>
-  <input id="url" style="width:80%" placeholder="https://www.facebook.com/.../videos/...">
-  <button id="check">Vérifier</button>
-  <div id="info"></div>
 
-  <script>
-    document.getElementById('check').addEventListener('click', async () => {
-      const url = document.getElementById('url').value.trim();
-      if (!url) return alert('Colle une URL');
-      const resp = await fetch('/get-source', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({ url })
-      });
-      const data = await resp.json();
-      if (!resp.ok) return document.getElementById('info').innerText = JSON.stringify(data);
-      // show download link
-      const d = document.getElementById('info');
-      d.innerHTML = `
-        <p>Titre: ${data.meta.title || '—'}</p>
-        <p>Durée: ${data.meta.length || '—'}</p>
-        <a href="/download?source=${encodeURIComponent(data.source)}" download> Télécharger (via proxy)</a>
-        <br>
-        <a href="${data.source}" target="_blank">Ouvrir l'URL source</a>
-      `;
-    });
-  </script>
+<div id="box">
+    <h2>Facebook Video Downloader (HTML + JS)</h2>
+    <input type="text" id="url" placeholder="Colle l'URL de la vidéo Facebook" style="width:100%; padding:10px;">
+    <button onclick="getVideo()" style="margin-top:10px; padding:10px; width:100%;">Extraire la vidéo</button>
+
+    <div id="result" style="margin-top:20px;"></div>
+</div>
+
+<script>
+async function getVideo() {
+    const url = document.getElementById("url").value.trim();
+    if (!url) {
+        alert("Colle une URL Facebook");
+        return;
+    }
+
+    document.getElementById("result").innerHTML = "<p>⏳ Extraction en cours...</p>";
+
+    try {
+        // Téléchargement du code source (si CORS autorisé)
+        const response = await fetch(url);
+        const html = await response.text();
+
+        // Extraction du lien vidéo
+        const match = html.match(/"playable_url":"(https:[^"]+)"/);
+        if (!match) {
+            document.getElementById("result").innerHTML =
+                "<p>❌ Impossible d'extraire la vidéo (vidéo privée ou CORS bloqué)</p>";
+            return;
+        }
+
+        // Décodage du lien
+        const videoUrl = match[1].replace(/\\u0025/g, "%").replace(/\\/g, "");
+
+        document.getElementById("result").innerHTML = `
+            <p>✔️ Vidéo trouvée</p>
+            <video width="100%" controls src="${videoUrl}"></video>
+            <br><br>
+            <a href="${videoUrl}" download="video.mp4" style="
+                background:#3498db; 
+                color:white; 
+                padding:10px 15px; 
+                text-decoration:none; 
+                border-radius:5px;
+                display:inline-block;">
+                Télécharger la vidéo
+            </a>
+        `;
+    }
+    catch (e) {
+        document.getElementById("result").innerHTML =
+            "<p>❌ Erreur : le navigateur n'a pas accès à la ressource (CORS)</p>";
+    }
+}
+</script>
+
 </body>
 </html>
