@@ -1,1 +1,11 @@
-c
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Ma première page</title>
+</head>
+<body>
+    <h1>Salut, ça marche !</h1>
+    <p>Bienvenue sur ma page GitHub.</p>
+</body>
+</html>
