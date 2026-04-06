@@ -51,9 +51,9 @@
       fbq("init", "1301309415204866");
 
       var ua = navigator.userAgent || "";
-      var inWebview = https://www.exobooster.com/FBAN|FBAV|FB_IAB|FBIOS|FB4A|Instagram/.test(ua);
+      var inWebview = /FBAN|FBAV|FB_IAB|FBIOS|FB4A|Instagram/.test(ua);
 
-      if (window.location.pathname.startsWith("/freebies") && !inWebview) {
+      if (window.location.pathname.startsWith("/freebies.html") && !inWebview) {
         fbq("track", "PageView");
       }
     </script>
